@@ -1,0 +1,42 @@
+/* Series → Book → Chapter → Section, shared with both independent language editions. */
+.hier-public{max-width:1000px;margin:35px auto 100px;min-height:55vh}
+.hier-breadcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:9px;color:var(--muted);font:12px/1.7 var(--sans);margin:20px 0 38px}
+.hier-breadcrumb a{color:var(--accent);text-decoration:underline;text-underline-offset:4px}
+.hier-breadcrumb span:last-child{color:var(--ink)}
+.hier-breadcrumb .hier-sep{opacity:.5}
+.hier-hero{background:var(--panel);border:1px solid var(--line);padding:clamp(26px,6vw,65px);margin-bottom:35px}
+.hier-eyebrow{font:700 11px/1.5 var(--sans);letter-spacing:.2em;color:var(--accent);margin-bottom:12px}
+.hier-hero h1{font:normal clamp(31px,4.2vw,55px)/1.3 Georgia,"Songti SC",serif;color:var(--ink);margin:0 0 22px}
+.hier-hero p{color:var(--muted);font:15px/1.9 "Songti SC",var(--sans);max-width:730px;white-space:pre-line;margin:0}
+.hier-section-heading{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding:13px 0 15px;margin:25px 0 20px}
+.hier-section-heading h2{font:normal 26px/1.4 Georgia,"Songti SC",serif;margin:0;color:var(--ink)}
+.hier-section-heading span{font:12px var(--sans);color:var(--muted)}
+.hier-chapter-block{border:1px solid var(--line);background:var(--panel);margin:0 0 24px}
+.hier-chapter-heading{border-bottom:1px solid var(--line);padding:22px 26px;background:var(--sand)}
+.hier-chapter-heading small{display:block;font:700 11px/1.5 var(--sans);letter-spacing:.13em;color:var(--accent)}
+.hier-chapter-heading h3{font:normal 24px/1.35 Georgia,"Songti SC",serif;margin:8px 0;color:var(--ink)}
+.hier-chapter-heading p{margin:0;color:var(--muted);font:13px/1.7 var(--sans)}
+.hier-section-row{display:flex;align-items:flex-start;gap:17px;padding:18px 25px;border-bottom:1px solid var(--line);transition:background .16s}
+.hier-section-row:last-child{border-bottom:0}
+.hier-section-row:hover{background:var(--sand)}
+.hier-section-number{font:12px/1.7 Georgia,serif;color:var(--accent);margin-top:3px;min-width:28px}
+.hier-section-row>span:nth-child(2){flex:1;min-width:0}
+.hier-section-row strong{display:block;font:500 18px/1.45 Georgia,"Songti SC",serif;color:var(--ink)}
+.hier-section-row small{display:block;color:var(--muted);font:12px/1.7 var(--sans);margin-top:5px}
+.hier-section-row>span:last-child{color:var(--accent)}
+.hier-book-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:17px;margin:22px 0 38px}
+.hier-book-card{display:grid;grid-template-columns:100px minmax(0,1fr);gap:17px;align-items:center;border:1px solid var(--line);background:var(--panel);padding:14px;min-height:160px;transition:transform .18s}
+.hier-book-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.hier-book-card img{width:100px;height:135px;object-fit:cover;background:var(--sand)}
+.hier-book-card strong{font:500 18px/1.5 Georgia,"Songti SC",serif;display:block;margin-bottom:8px;color:var(--ink)}
+.hier-book-card small{font:12px/1.6 var(--sans);color:var(--muted);display:block}
+.hier-book-card em{font:700 11px var(--sans);color:var(--accent);display:block;margin-top:12px;font-style:normal}
+.hier-series-books{margin:36px auto 52px}
+.hier-standalone-books{margin:48px 0}
+.hier-empty{color:var(--muted);padding:40px 15px}
+.hier-read-nav{margin:18px 0 28px;padding:14px 20px;background:var(--panel);border:1px solid var(--line)}
+.hier-read-nav .hier-breadcrumb{margin:0 0 12px}
+.hier-read-neighbors{display:flex;justify-content:space-between;gap:18px;border-top:1px solid var(--line);padding-top:11px}
+.hier-read-neighbors a{font:12px/1.6 var(--sans);color:var(--accent);max-width:45%}
+.hier-read-neighbors a:last-child{text-align:right}
+@media(max-width:560px){.hier-public{margin:18px auto 60px}.hier-hero{padding:25px 20px}.hier-book-list{grid-template-columns:1fr}.hier-section-row{padding:13px 16px;gap:12px}.hier-book-card{grid-template-columns:85px 1fr}.hier-book-card img{width:85px;height:115px}.hier-chapter-heading{padding:17px 18px}.hier-read-nav{padding:12px}}
