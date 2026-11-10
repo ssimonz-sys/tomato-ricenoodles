@@ -97,8 +97,9 @@
     $('#save-post').disabled=true;
     try{
       const r=await req(isEditing?`/api/admin/posts/${state.editing}`:'/api/admin/posts',{method:isEditing?'PUT':'POST',body:JSON.stringify(value)});
-      state.dirty=false;state.editing=r.id;await load(r.id);
+      state.dirty=false;state.editing=r.id;
       await window.TRNHierarchy?.onPostSaved?.(r.id);
+      await load(r.id);
       message('#editor-message',f.status.value==='published'?`已发布到${f.language.value==='zh'?'中文站':'英文站'}。`:'私密草稿已保存。');$('#save-status').textContent='已保存';updatePublishControls();
     }catch(e){message('#editor-message',e.message);}
     finally{$('#save-post').disabled=false;}
