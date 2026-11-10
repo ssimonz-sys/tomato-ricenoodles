@@ -17,14 +17,14 @@
 <body class="admin-desk manager-page">
 <header class="desk-header"><div class="desk-head-inner">
 <a href="/en/">✳ Tomato Ricenoodles</a><span>Library Manager</span>
-<a href="/admin/en/" class="manager-header-link">Writing Studio</a><a class="edition-switch" href="/admin/en/manage/">中文书架</a>
-<button id="admin-theme-toggle" type="button" aria-pressed="false" aria-label="切换后台明暗模式">☾ 夜间模式</button>
+<a href="/admin/en/" class="manager-header-link">Writing Studio</a><a class="edition-switch" href="/admin/zh/manage/">中文书架</a>
+<button id="admin-theme-toggle" type="button" aria-pressed="false" aria-label="Toggle dark mode">☾ Dark mode</button>
 <button id="logout" hidden>Sign out</button>
 </div></header>
 <main class="manager-container">
 <section id="manager-login" class="login-box" hidden>
-<p class="eyebrow">PRIVATE AUTHOR WORKSPACE</p><h1>登录Library Manager</h1>
-<p>管理Collections、Books、Chapters、小节与独立文章。</p>
+<p class="eyebrow">PRIVATE AUTHOR WORKSPACE</p><h1>Sign in to Library Manager</h1>
+<p>Manage collections, books, chapters, and individual posts.</p>
 <form id="manager-login-form"><label>Admin password
 <input id="manager-password" type="password" required autocomplete="current-password"></label>
 <button type="submit" class="primary">Sign in</button></form>
@@ -36,9 +36,9 @@
 <h1>Library Manager<span class="period">.</span></h1>
 <p>Organize English collections and books here. Open a book to manage its chapters. Choose placement while writing.</p>
 </div>
-<div class="manager-heading-actions"><a class="manager-outline-button" href="/admin/en/">进入Writing Studio</a><a class="primary" href="/admin/en/?new=1">＋ New post</a></div>
+<div class="manager-heading-actions"><a class="manager-outline-button" href="/admin/en/">Open Writing Studio</a><a class="primary" href="/admin/en/?new=1">＋ New post</a></div>
 </div>
-<div class="manager-stats" aria-label="作品统计">
+<div class="manager-stats" aria-label="Library statistics">
 <div><span>Collections</span><strong id="manager-stat-series">0</strong></div>
 <div><span>Books</span><strong id="manager-stat-books">0</strong></div>
 <div><span>Chapters</span><strong id="manager-stat-chapters">0</strong></div>
@@ -46,27 +46,27 @@
 </div>
 <div class="manager-controls">
 <div class="manager-tabs" role="tablist" aria-label="Management tabs">
-<button id="manager-tab-structure" type="button" role="tab" aria-selected="true" class="active">Collections与Books</button>
+<button id="manager-tab-structure" type="button" role="tab" aria-selected="true" class="active">Collections & Books</button>
 <button id="manager-tab-articles" type="button" role="tab" aria-selected="false">Posts & Drafts</button>
 <button id="manager-tab-comments" type="button" role="tab" aria-selected="false">Comments <span id="manager-pending-count"></span></button>
 </div>
 <div class="manager-controls-right">
 <label for="manager-language" hidden>Edition</label>
-<select id="manager-language" aria-label="筛选Edition" hidden disabled>
+<select id="manager-language" aria-label="Edition filter" hidden disabled>
 <option value="zh">Chinese edition</option><option value="en">English edition</option>
 </select>
 <button type="button" id="manager-reload" class="manager-outline-button">Refresh</button>
 </div>
 </div>
 <div id="manager-notice" class="manager-notice" role="status" hidden></div>
-<section id="manager-structure" aria-label="Collections和Books">
-<div class="manager-section-top"><div><h2>Collections书架</h2><p>Collections中展示Books卡片，点击进入Books详情后管理Chapters</p></div>
-<div class="manager-top-buttons"><button type="button" id="manager-add-series" class="manager-outline-button">＋ 新建Collections</button><button type="button" id="manager-add-book" class="primary">＋ 新建Books</button></div></div>
+<section id="manager-structure" aria-label="Collections and books">
+<div class="manager-section-top"><div><h2>Collection library</h2><p>Books are shown as cards. Open a book to manage its chapters.</p></div>
+<div class="manager-top-buttons"><button type="button" id="manager-add-series" class="manager-outline-button">＋ New collection</button><button type="button" id="manager-add-book" class="primary">＋ New book</button></div></div>
 <div id="manager-series-list" class="manager-series-list"></div>
 <div id="manager-standalone" class="manager-standalone"></div>
 </section>
 <section id="manager-articles" aria-label="Posts" hidden>
-<div class="manager-section-top"><div><h2>Posts</h2><p>独立随笔、Poetry、Fiction及已经编入Chapters的小节</p></div><a id="manager-add-article" href="/admin/en/?new=1" class="primary">＋ Write post</a></div>
+<div class="manager-section-top"><div><h2>Posts</h2><p>Standalone essays, poetry, fiction, and chapters.</p></div><a id="manager-add-article" href="/admin/en/?new=1" class="primary">＋ Write post</a></div>
 <div class="manager-article-filters"><div class="manager-category-tabs" id="manager-category-tabs" aria-label="Writing category">
 <button type="button" class="active" data-category="all">All</button>
 <button type="button" data-category="essay">Essays & Commentary</button>
@@ -76,7 +76,7 @@
 </div><div class="manager-publication-tabs" id="manager-publication-tabs" aria-label="Publication status">
 <button type="button" class="active" data-status="all">All posts</button><button type="button" data-status="draft">Drafts</button><button type="button" data-status="published">Published</button>
 </div></div>
-<div class="manager-search-line"><input id="manager-search" type="search" placeholder="搜索标题、网址标识或Tags" aria-label="搜索文章"><label><input id="manager-only-unlinked" type="checkbox">Standalone only</label></div>
+<div class="manager-search-line"><input id="manager-search" type="search" placeholder="Search titles, slugs, or tags" aria-label="Search posts"><label><input id="manager-only-unlinked" type="checkbox">Standalone only</label></div>
 <div id="manager-article-list" class="manager-article-list"></div>
 </section>
 <section id="manager-comments" aria-label="匿名Comments" hidden>
