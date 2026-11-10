@@ -241,7 +241,7 @@
     if(Object.hasOwn(dictionary,trimmed))return value.replace(trimmed,dictionary[trimmed]);
     let result=value;
     for(const [re,out] of pieces)result=result.replace(re,out);
-    return result;
+    return result.replace(/ {2,}·/g,' ·');
   }
   function translateNode(node){
     if(node.nodeType!==3)return;
