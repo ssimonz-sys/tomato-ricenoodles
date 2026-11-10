@@ -7,7 +7,7 @@
     let fence='';
     const processed=[];
     for(const line of rows){
-      const marker=line.match(/^ {0,3}(`{3,}|~{3,})(?:[ \t]|$)/);
+      const marker=line.match(/^ {0,3}(`{3,}|~{3,})(?:[^\n]*)$/);
       if(marker){
         if(!fence)fence=marker[1][0];
         else if(marker[1][0]===fence)fence='';
