@@ -157,7 +157,7 @@ function renderBookDetails(book){
       '<div class="manager-actions">'+button('chapter-new',book.id,'＋ 添加章节')+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
     '</div>'+
     '<div class="manager-book-detail-chapters">'+
-      (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">还没有章节。可以添加一章，再把文章放进去。单篇作品也照此管理。</p>')+
+      (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">还没有章节。你可以在写作页新建文章并选择这本书，系统会自动把文章作为一章加入。</p>')+
     '</div></section>';
 }
 function renderChapter(chapter){

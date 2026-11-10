@@ -162,3 +162,6 @@ html[data-admin-theme="dark"] .manager-header-link{color:#c6d8c5}
 .manager-book-details-header h2{font:600 clamp(24px,3vw,38px)/1.35 var(--serif);margin:9px 0}
 .manager-book-details-header p{color:var(--muted);font-size:14px;max-width:640px}
 .manager-book-detail-chapters{display:grid;gap:15px}
+
+/* Single-piece and multi-chapter books share the same book card layout. */
+.manager-book-detail-chapters>.manager-chapter{margin-bottom:0}

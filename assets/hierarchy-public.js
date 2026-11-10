@@ -40,7 +40,11 @@ function showBook(){
  if(series)trail.push([series.title,seriesUrl(series.slug)]);
  trail.push([book.title,null]);
  const chapters=content.chapters.filter(ch=>ch.book_id===book.id);
- root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list">'+(chapters.length?chapters.map((ch,i)=>'<section class="hier-chapter-block"><div class="hier-chapter-heading"><a href="'+chapterUrl(ch.id)+'"><small>'+(zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1))+'</small><h3>'+esc(ch.title)+'</h3><p>'+esc(ch.description||'')+'</p></a></div><div>'+sectionFor(ch.id).map(sectionItem).join('')+'</div></section>').join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
+ const chapterLink=ch=>{
+   const entries=sectionFor(ch.id);
+   return entries.length===1?postUrl(entries[0].slug):chapterUrl(ch.id);
+ };
+ root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list">'+(chapters.length?chapters.map((ch,i)=>'<section class="hier-chapter-block"><div class="hier-chapter-heading"><a href="'+chapterLink(ch)+'"><small>'+(zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1))+'</small><h3>'+esc(ch.title)+'</h3><p>'+esc(ch.description||'')+'</p></a></div><div>'+(sectionFor(ch.id).length===1?'':sectionFor(ch.id).map(sectionItem).join(''))+'</div></section>').join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
 }
 function showChapter(){
  const root=$('#hier-public-root'),ch=chapterBy(q.get('id'));
