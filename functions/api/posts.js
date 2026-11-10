@@ -10,5 +10,5 @@ export async function onRequestGet({request,env}){
   const seriesGuard=seriesEnabled?" OR (b.series_slug<>'' AND NOT EXISTS (SELECT 1 FROM trn_series t WHERE t.language=b.language AND t.slug=b.series_slug AND t.status='published'))":"";
   const access=enabled?" AND NOT EXISTS (SELECT 1 FROM trn_section_links l JOIN trn_chapters c ON c.id=l.chapter_id JOIN trn_books b ON b.id=c.book_id WHERE l.post_id=posts.id AND (c.status<>'published' OR b.status<>'published' OR b.language<>posts.language"+seriesGuard+"))":"";
   const {results}=await env.DB.prepare(base+access+" ORDER BY published_at DESC LIMIT 200").bind(lang).all();
-  return send({posts:(results||[]).map(r=>normalizePost(r))},200,{'Cache-Control':'public, max-age=60'});
+  return send({posts:(results||[]).map(r=>normalizePost(r))},200,{'Cache-Control':'no-store'});
 }

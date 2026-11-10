@@ -19,5 +19,5 @@ export async function onRequestGet({request,env,params}){
       }
     }
   }
-  return send({post:normalizePost(p,true)},200,{'Cache-Control':'public,max-age=60'});
+  return send({post:normalizePost(p,true)},200,{'Cache-Control':'no-store'});
 }
