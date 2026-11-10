@@ -43,6 +43,7 @@
     form.reset();
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:'en',type:'essay',status:'draft'}[name]||'');
     form.elements.tags.value=p?.tags?.join(', ')||'';form.elements.collection_slugs.value=p?.collection_slugs?.join(', ')||'';
+    window.TRNStudio?.load(p?.body||'');
     $('#edit-label').textContent=p?'编辑文章':'新建文章';
     $('#delete-post').hidden=!p;
     $('#save-status').textContent='';$('#editor-message').textContent='';
@@ -82,7 +83,7 @@
   form.addEventListener('submit',async e=>{
     e.preventDefault();message('#editor-message','正在保存…');
     const f=form.elements;
-    const value={language:f.language.value,type:f.type.value,title:f.title.value,slug:f.slug.value,excerpt:f.excerpt.value,cover_url:f.cover_url.value,body:f.body.value,tags:f.tags.value,collection_slugs:f.collection_slugs.value,status:f.status.value};
+    const value={language:f.language.value,type:f.type.value,title:f.title.value,slug:f.slug.value,excerpt:f.excerpt.value,cover_url:f.cover_url.value,body:(window.TRNStudio?.getMarkdown() ?? f.body.value),tags:f.tags.value,collection_slugs:f.collection_slugs.value,status:f.status.value};
     const isEditing=!!state.editing;
     const original=state.posts.find(p=>p.id===state.editing);
     if(original?.status==='published' && original.language!==value.language){
