@@ -1,0 +1,15 @@
+/* Cover picker in the single-article editor and book/series management dialogs. */
+.trn-cover-picker{display:flex;align-items:flex-start;gap:14px;margin:10px 0 6px;padding:12px;border:1px dashed var(--border, #d4d4cc);background:var(--paper,#f7f6f2);border-radius:8px}
+.trn-cover-picker.dragging{border-color:var(--accent,#b8513e);background:var(--sand,#e9e6dc)}
+.trn-cover-picker .trn-cover-preview{width:96px;height:110px;max-width:35%;object-fit:cover;border-radius:5px;border:1px solid var(--border,#ddd)}
+.trn-cover-picker .trn-cover-preview[hidden]{display:none!important}
+.trn-cover-actions{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:6px}
+.trn-cover-choose{cursor:pointer;border:1px solid var(--border,#d4d4cc);border-radius:5px;background:var(--white,#fff);color:var(--ink,#252823);font:600 12px var(--sans,Arial);padding:9px 12px}
+.trn-cover-choose:hover{border-color:var(--accent,#b8513e);color:var(--accent,#b8513e)}
+.trn-cover-choose:disabled{opacity:.6;cursor:wait}
+.trn-cover-picker small{display:block;font:11px/1.6 var(--sans,Arial);font-weight:400;color:var(--muted,#737a70)}
+.trn-cover-status{margin:0;color:var(--accent,#b8513e);font:11px/1.6 var(--sans,Arial);overflow-wrap:anywhere}
+.trn-cover-file[hidden]{display:none!important}
+html[data-admin-theme="dark"] .trn-cover-picker{background:#202a23;border-color:#435348;color:#e0e8df}
+html[data-admin-theme="dark"] .trn-cover-choose{background:#1b241e;color:#e0e8df;border-color:#435348}
+@media(max-width:510px){.trn-cover-picker{flex-direction:column}.trn-cover-picker .trn-cover-preview{width:100%;height:150px;max-width:100%}}
