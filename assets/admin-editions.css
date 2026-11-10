@@ -1,0 +1,7 @@
+/* Separate author workspaces, same secure backend. */
+.edition-switch{display:inline-flex;padding:7px 10px;border:1px solid var(--border);border-radius:5px;text-decoration:none;font:600 12px var(--sans);color:var(--olive);white-space:nowrap}
+.edition-switch:hover{color:var(--accent);border-color:var(--accent)}
+html[data-admin-theme="dark"] .edition-switch{color:#c5dcc7}
+body:has(#desk-view:not([hidden])) .edition-switch{align-self:center}
+.studio-publication-bar label.publish-state[hidden],.manager-controls-right [hidden]{display:none!important}
+@media(max-width:600px){.edition-switch{padding:5px 7px;font-size:11px}}
