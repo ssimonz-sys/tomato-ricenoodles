@@ -27,7 +27,7 @@ export async function onRequestGet(context){
     db.prepare('SELECT * FROM trn_chapters ORDER BY book_id,created_at,id').all(),
     db.prepare('SELECT * FROM trn_section_links ORDER BY chapter_id,sort_order').all()
   ]);
-  const series=hasSeries?(await db.prepare("SELECT t.*, COALESCE((SELECT MAX(activity_at) FROM (SELECT p.updated_at AS activity_at FROM posts p WHERE p.language=t.language AND p.status='published' AND EXISTS (SELECT 1 FROM json_each(p.collection_slugs) j WHERE j.value=t.slug) UNION ALL SELECT p.updated_at AS activity_at FROM posts p JOIN trn_section_links l ON l.post_id=p.id JOIN trn_chapters ch ON ch.id=l.chapter_id JOIN trn_books b ON b.id=ch.book_id WHERE b.language=t.language AND b.series_slug=t.slug AND p.status='published')),t.created_at) AS last_activity FROM trn_series t ORDER BY t.language,last_activity DESC,t.created_at DESC,t.slug").all()).results||[]:[];
+  const series=hasSeries?(await db.prepare("SELECT t.*, MAX(COALESCE((SELECT MAX(p.updated_at) FROM posts p WHERE p.language=t.language AND p.status='published' AND EXISTS (SELECT 1 FROM json_each(p.collection_slugs) j WHERE j.value=t.slug)),''),COALESCE((SELECT MAX(p.updated_at) FROM posts p JOIN trn_section_links l ON l.post_id=p.id JOIN trn_chapters ch ON ch.id=l.chapter_id JOIN trn_books b ON b.id=ch.book_id WHERE b.language=t.language AND b.series_slug=t.slug AND p.status='published'),''),t.created_at) AS last_activity FROM trn_series t ORDER BY t.language,last_activity DESC,t.created_at DESC,t.slug").all()).results||[]:[];
   return send({enabled:true,seriesEnabled:hasSeries,series,books:books.results||[],chapters:chapters.results||[],links:links.results||[]});
 }
 export async function onRequestPost(context){
@@ -95,18 +95,19 @@ export async function onRequestPost(context){
         const id=crypto.randomUUID();
         const chosenLanguage=lang(data.language),chosenSeries=series(data.series_slug);
         if(chosenSeries && await seriesEnabled(db) && !await db.prepare('SELECT slug FROM trn_series WHERE language=? AND slug=?').bind(chosenLanguage,chosenSeries).first())return error('所选系列不存在，请先在系列书架中创建。',409);
+        const existingOrder=await db.prepare('SELECT COALESCE(MAX(sort_order),0) AS max_order FROM trn_books WHERE language=? AND series_slug=?').bind(chosenLanguage,chosenSeries).first();
         await db.prepare('INSERT INTO trn_books(id,language,series_slug,title,description,cover_url,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)')
-          .bind(id,lang(data.language),series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),order(data.sort_order),now,now).run();
+          .bind(id,lang(data.language),series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),(existingOrder?.max_order||0)+10,now,now).run();
         return send({ok:true,id},201);
       }
       case 'book-update':{
         const id=uuid(data.id);
-        const old=await db.prepare('SELECT id,language FROM trn_books WHERE id=?').bind(id).first();
+        const old=await db.prepare('SELECT id,language,sort_order FROM trn_books WHERE id=?').bind(id).first();
         if(!old)return error('找不到这本书。',404);
         const chosenSeries=series(data.series_slug);
         if(chosenSeries && await seriesEnabled(db) && !await db.prepare('SELECT slug FROM trn_series WHERE language=? AND slug=?').bind(old.language,chosenSeries).first())return error('所选系列不存在，请先创建该系列。',409);
         await db.prepare('UPDATE trn_books SET series_slug=?,title=?,description=?,cover_url=?,status=?,sort_order=?,updated_at=? WHERE id=?')
-          .bind(series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),order(data.sort_order),now,id).run();
+          .bind(series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),old.sort_order,now,id).run();
         return send({ok:true,id});
       }
       case 'book-delete':{
