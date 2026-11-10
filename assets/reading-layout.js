@@ -15,16 +15,19 @@
         continue;
       }
       if(fence){processed.push(line);continue;}
-      const leading=line.match(/^([ \t]+)(?=\S)/);
+      const quoted=line.match(/^ {0,3}(?:>[ \t]?)+/);
+      const quotePrefix=quoted?quoted[0]:'';
+      const body=quoted?line.slice(quotePrefix.length):line;
+      const leading=body.match(/^([ \t\u00a0\u3000]+)(?=\S)/);
       if(!leading){processed.push(line);continue;}
-      const text=line.slice(leading[1].length);
+      const text=body.slice(leading[1].length);
       // Keep native Markdown syntax for block structures and explicitly authored HTML.
       if(/^(?:#{1,6}[ \t]|[-*+][ \t]|\d+[.)][ \t]|>[ \t]?|\||<|`{3,}|~{3,})/.test(text)){
         processed.push(line);
         continue;
       }
-      const prefix=leading[1].replace(/ /g,'&nbsp;').replace(/\t/g,'&nbsp;&nbsp;&nbsp;&nbsp;');
-      processed.push(prefix+text);
+      const prefix=leading[1].replace(/ /g,'&nbsp;').replace(/\t/g,'&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\u00a0/g,'&nbsp;').replace(/\u3000/g,'&emsp;');
+      processed.push(quotePrefix+prefix+text);
     }
     // Keep prose newlines as separate paragraphs while preserving structural
     // Markdown and fenced code. Original stored Markdown is untouched.

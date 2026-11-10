@@ -26,7 +26,10 @@
     const rows=String(markdown??'').replace(/\r\n?/g,'\n').split('\n');
     let inFence='';
     for(const row of rows) {
-      const fence=row.match(/^ {0,3}(`{3,}|~{3,})/);
+      // Quote markers are structural, but spaces after them are authorial indent.
+      const quote=row.match(/^ {0,3}(?:>[ \t]?)+/);
+      const body=quote?row.slice(quote[0].length):row;
+      const fence=body.match(/^ {0,3}(`{3,}|~{3,})/);
       if(fence){
         const type=fence[1][0];
         if(!inFence)inFence=type;
@@ -34,9 +37,9 @@
         continue;
       }
       if(inFence)continue;
-      const match=row.match(prefixPattern);
+      const match=body.match(prefixPattern);
       if(!match)continue;
-      const content=row.slice(match[0].length);
+      const content=body.slice(match[0].length);
       // Real lists, headings, quotes, HTML blocks and tables keep native markup.
       if(/^(?:#{1,6}[ \t]|[-*+][ \t]|\d+[.)][ \t]|>[ \t]?|\||<)/.test(content))continue;
       const key=normalize(content);
@@ -48,7 +51,7 @@
   function apply(root,markdown) {
     if(!root?.querySelectorAll)return 0;
     const records=indentedLines(markdown);
-    const paragraphs=Array.from(root.querySelectorAll('p')).filter(p=>!p.closest('li,blockquote,table,pre'));
+    const paragraphs=Array.from(root.querySelectorAll('p')).filter(p=>!p.closest('li,table,pre'));
     let next=0,done=0;
     for(const p of paragraphs){
       if(p.dataset.trnPreviewIndent==='1'){
