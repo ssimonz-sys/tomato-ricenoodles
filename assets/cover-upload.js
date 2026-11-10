@@ -3,7 +3,51 @@
   'use strict';
   const attached=new WeakMap();
   const MAX_SIZE=5*1024*1024;
+  const MAX_STORED=1200000; // D1 per-row limit is 2MB; use a safer 1.2MB ceiling.
   const allowed=new Set(['image/png','image/jpeg','image/webp','image/gif']);
+
+  async function compressForD1(source){
+    if(source.size<=MAX_STORED)return source;
+    if(source.type==='image/gif')throw Error('动态 GIF 需要小于 1.2 MB。请先压缩 GIF，或换用 JPG、PNG、WebP。');
+    const objectUrl=URL.createObjectURL(source);
+    let image;
+    try{
+      image=await new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve(img);
+        img.onerror=()=>reject(Error('无法读取图片，请换一个文件。'));
+        img.src=objectUrl;
+      });
+      if(!image.naturalWidth||!image.naturalHeight)throw Error('图片尺寸不正确。');
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      if(!ctx)throw Error('当前浏览器无法压缩图片。');
+      const sourceLong=Math.max(image.naturalWidth,image.naturalHeight);
+      for(const limit of [1600,1280,960,768,600]){
+        const ratio=Math.min(1,limit/sourceLong);
+        canvas.width=Math.max(1,Math.round(image.naturalWidth*ratio));
+        canvas.height=Math.max(1,Math.round(image.naturalHeight*ratio));
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(image,0,0,canvas.width,canvas.height);
+        for(const quality of [0.85,0.72,0.60,0.46]){
+          let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+          if(blob && blob.type!=='image/webp'){
+            ctx.globalCompositeOperation='destination-over';
+            ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+            blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+            ctx.globalCompositeOperation='source-over';
+          }
+          if(blob && blob.size>0 && blob.size<=MAX_STORED){
+            const ext=blob.type==='image/webp'?'webp':'jpg';
+            return new File([blob],'cover.'+ext,{type:blob.type});
+          }
+        }
+      }
+      throw Error('图片压缩后仍然过大，请选择分辨率更低的封面。');
+    }finally{
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
   const supportedUrl=value=>/^https:\/\/[^\s<>"']+$/i.test(value||'')||
     /^\/assets\/(?:graphics|covers)\/[a-z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)$/i.test(value||'')||
     /^\/media\/covers\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png|webp|gif)$/i.test(value||'');
@@ -25,7 +69,7 @@
     choose.className='trn-cover-choose';
     choose.textContent='↑ 从电脑上传封面';
     const hint=document.createElement('small');
-    hint.textContent='支持 JPG、PNG、WebP、GIF，最大 5 MB。也可以直接粘贴图片网址。';
+    hint.textContent='支持 JPG、PNG、WebP、GIF。原图最多 5 MB，自动压缩后保存到 D1（无需绑定银行卡）；动态图需小于 1.2 MB。';
     const status=document.createElement('p');
     status.className='trn-cover-status';
     status.setAttribute('role','status');
@@ -73,10 +117,12 @@
         status.textContent='登录状态尚未就绪，请刷新后台后重试。';
         return;
       }
-      choose.disabled=true;status.textContent='图片上传中…';
+      choose.disabled=true;status.textContent='正在准备图片…';
       try{
+        const ready=await compressForD1(selected);
+        status.textContent=ready.size<selected.size?'已压缩图片，正在上传…':'图片上传中…';
         const body=new FormData();
-        body.append('file',selected,selected.name);
+        body.append('file',ready,ready.name);
         const result=await fetch('/api/admin/upload-cover',{
           method:'POST',credentials:'same-origin',headers:{'Accept':'application/json','X-CSRF-Token':csrf},body
         });
