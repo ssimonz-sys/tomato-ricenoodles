@@ -39,7 +39,7 @@ function showBook(){
  const trail=[[zh?'系列文集':'Collections',route('collections.html')]];
  if(series)trail.push([series.title,seriesUrl(series.slug)]);
  trail.push([book.title,null]);
- const chapters=content.chapters.filter(ch=>ch.book_id===book.id).sort((a,b)=>a.sort_order-b.sort_order);
+ const chapters=content.chapters.filter(ch=>ch.book_id===book.id);
  root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list">'+(chapters.length?chapters.map((ch,i)=>'<section class="hier-chapter-block"><div class="hier-chapter-heading"><a href="'+chapterUrl(ch.id)+'"><small>'+(zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1))+'</small><h3>'+esc(ch.title)+'</h3><p>'+esc(ch.description||'')+'</p></a></div><div>'+sectionFor(ch.id).map(sectionItem).join('')+'</div></section>').join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
 }
 function showChapter(){

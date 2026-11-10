@@ -144,3 +144,7 @@ html[data-admin-theme="dark"] .manager-header-link{color:#c6d8c5}
 .manager-comment-row small{font:11px var(--sans);color:var(--muted)}
 #manager-pending-count:not(:empty){background:var(--accent);color:white;font:600 10px var(--sans);padding:2px 6px;border-radius:10px}
 @media(max-width:700px){.manager-comment-row{flex-wrap:wrap}.manager-comment-row>.manager-article-actions{width:100%;justify-content:flex-start}}
+
+.manager-reorder-hint{font:11px/1.6 var(--sans);color:var(--muted);margin:0;padding:4px 8px 10px}
+.manager-drag-handle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;min-height:35px;font-size:23px;color:var(--muted);cursor:grab;user-select:none}
+.manager-book.is-dragging{opacity:.45;border:1px dashed var(--accent)}

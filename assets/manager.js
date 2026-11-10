@@ -7,6 +7,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const types={essay:'政论与随笔',fiction:'小说',poetry:'诗歌',note:'笔记与杂记'};
 const langLabel=l=>l==='zh'?'中文站':'英文站';
 const rank=(a,b)=>(a.sort_order||0)-(b.sort_order||0)||a.title.localeCompare(b.title,'zh-CN');
+const newest=(a,b)=>String(b.last_activity||b.created_at||'').localeCompare(String(a.last_activity||a.created_at||''))||String(b.created_at||'').localeCompare(String(a.created_at||''))||a.title.localeCompare(b.title,'zh-CN');
+const chapterOrder=(a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id));
 const sectionLink=id=>state.links.find(link=>link.post_id===id);
 const bookFor=id=>state.books.find(book=>book.id===id);
 const chapterFor=id=>state.chapters.find(chapter=>chapter.id===id);
@@ -58,7 +60,7 @@ function coverURL(value){
   return '';
 }
 function selectedSeries(){
-  return state.series.filter(x=>x.language===state.lang).sort(rank);
+  return state.series.filter(x=>x.language===state.lang).sort(newest);
 }
 function count(id){
   const lang=state.lang;
@@ -114,12 +116,12 @@ function renderSeries(item){
       '<span class="manager-hint">'+esc(item.slug)+' · '+seriesBooks.length+' 本书</span></div>'+
       '<div class="manager-actions">'+button('book-new-in-series',id,'＋ 书')+button('series-edit',id,'编辑')+button('series-delete',id,'删除','danger')+'</div>'+
     '</div>'+
-    (seriesBooks.length?'<div class="manager-books">'+seriesBooks.map(renderBook).join('')+'</div>':'<p class="manager-subempty">这里还没有书籍，也可以先把系列建立起来。</p>')+
+    (seriesBooks.length?'<div class="manager-books" data-book-list="'+esc(id)+'"><p class="manager-reorder-hint">拖动书名前的 ⠿ 调整顺序，松开后自动保存。</p>'+seriesBooks.map(b=>renderBook(b,true)).join('')+'</div>':'<p class="manager-subempty">这里还没有书籍，也可以先把系列建立起来。</p>')+
   '</section>';
 }
-function renderBook(book){
-  const chapters=state.chapters.filter(c=>c.book_id===book.id).sort(rank);
-  return '<details class="manager-book" open><summary><span class="manager-expand-symbol" aria-hidden="true"></span><span><strong>书 · '+esc(book.title)+'</strong><small>'+chapters.length+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></span></summary>'+
+function renderBook(book,reorderable=false){
+  const chapters=state.chapters.filter(c=>c.book_id===book.id).sort(chapterOrder);
+  return '<details class="manager-book" data-book-id="'+esc(book.id)+'" open><summary>'+(reorderable?'<span class="manager-drag-handle" draggable="true" title="拖动调整书籍顺序" aria-label="拖动调整书籍顺序">⠿</span>':'')+'<span class="manager-expand-symbol" aria-hidden="true"></span><span><strong>书 · '+esc(book.title)+'</strong><small>'+chapters.length+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></span></summary>'+
   '<div class="manager-nested">'+
   '<div class="manager-nested-actions">'+button('chapter-new',book.id,'＋ 新建章')+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
   (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">这本书还没有章节。</p>')+
@@ -132,7 +134,7 @@ function renderChapter(chapter){
   (links.length?links.map(link=>{
     const p=postFor(link.post_id);
     if(!p)return '';
-    return '<div class="manager-section-row"><span><strong>节 · '+esc(p.title)+'</strong><small>'+ (p.status==='published'?'已发布':'草稿')+' · 排序 '+link.sort_order+'</small></span><div class="manager-actions"><a class="manager-mini" href="'+writeLink(p.id)+'">写作</a>'+button('section-move',p.id,'调整归属')+button('section-unlink',p.id,'移出','danger')+'</div></div>';
+    return '<div class="manager-section-row"><span><strong>节 · '+esc(p.title)+'</strong><small>'+ (p.status==='published'?'已发布':'草稿')+'</small></span><div class="manager-actions"><a class="manager-mini" href="'+writeLink(p.id)+'">写作</a>'+button('section-move',p.id,'调整归属')+button('section-unlink',p.id,'移出','danger')+'</div></div>';
   }).join(''):'<p class="manager-subempty">暂无小节。可以新建一节，也可以将已有文章关联过来。</p>')+
   '</div></details>';
 }
@@ -228,8 +230,7 @@ async function seriesEditor(item=null){
   field({name:'art',label:'系列封面（上传图片或填网址）',value:item?.art}),
   field({name:'category',label:'系列类别',options:categoryOptions,value:item?.category||'essay'}),
   field({name:'theme',label:'封面主题配色',options:themeOptions,value:item?.theme||'sage'}),
-  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'published'}),
-  field({name:'sort_order',label:'排序（数字越小越靠前）',type:'number',value:item?.sort_order??0})
+  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'published'})
  ];
  const titleInput=fieldsDef[0].querySelector('input'),slugInput=fieldsDef[1].querySelector('input');
  if(!item)titleInput.addEventListener('blur',()=>{
@@ -247,16 +248,14 @@ function bookEditor(item=null,defaultSlug=''){
   field({name:'series_slug',label:'所属系列',options,value:item?.series_slug??defaultSlug}),
   field({name:'description',label:'书籍简介',type:'textarea',value:item?.description}),
   field({name:'cover_url',label:'书籍封面（上传图片或填网址）',value:item?.cover_url}),
-  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'}),
-  field({name:'sort_order',label:'排序',type:'number',value:item?.sort_order??0})
+  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'})
  ],data=>api(payload(item?'book-update':'book-create',{...data,...(item?{id:item.id}:{language:state.lang})})));
 }
 function chapterEditor(book,item=null){
  present(item?'编辑章节':'新建章节',[
   field({name:'title',label:'章节标题',required:true,value:item?.title}),
   field({name:'description',label:'章节简介',type:'textarea',value:item?.description}),
-  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'}),
-  field({name:'sort_order',label:'排序',type:'number',value:item?.sort_order??0})
+  field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'})
  ],data=>api(payload(item?'chapter-update':'chapter-create',{...data,...(item?{id:item.id}:{book_id:book.id})})));
 }
 function linkEditor(chapter=null,post=null){
@@ -309,6 +308,38 @@ async function act(action,id){
   case 'article-delete':if(post)await removeArticle(post);break;
  }
 }
+let draggedBook=null;
+document.addEventListener('dragstart',e=>{
+ const handle=e.target.closest('.manager-drag-handle');if(!handle)return;
+ const list=handle.closest('[data-book-list]'),card=handle.closest('.manager-book');
+ if(!list||!card)return;
+ draggedBook={list,id:card.dataset.bookId};card.classList.add('is-dragging');
+ e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',card.dataset.bookId);
+});
+document.addEventListener('dragover',e=>{
+ if(!draggedBook)return;
+ const list=e.target.closest('[data-book-list]');if(list!==draggedBook.list)return;
+ e.preventDefault();
+ const target=e.target.closest('.manager-book'),moving=list.querySelector('.is-dragging');
+ if(!target||!moving||target===moving)return;
+ const rect=target.getBoundingClientRect();
+ list.insertBefore(moving,e.clientY<rect.top+rect.height/2?target:target.nextSibling);
+});
+document.addEventListener('drop',async e=>{
+ if(!draggedBook)return;
+ const current=draggedBook;draggedBook=null;
+ if(e.target.closest('[data-book-list]')!==current.list){renderStructure();return;}
+ e.preventDefault();
+ const ids=[...current.list.querySelectorAll(':scope > .manager-book')].map(x=>x.dataset.bookId);
+ const [language,series_slug]=current.list.dataset.bookList.split('::');
+ current.list.querySelector('.is-dragging')?.classList.remove('is-dragging');
+ try{
+  await api(payload('book-reorder',{language,series_slug,ids}));
+  state.books.filter(b=>b.language===language&&b.series_slug===series_slug).forEach(b=>{b.sort_order=(ids.indexOf(b.id)+1)*10;});
+  note('书籍顺序已保存。');
+ }catch(err){note('排序保存失败：'+err.message,true);await refresh();}
+});
+document.addEventListener('dragend',()=>{if(draggedBook){draggedBook=null;renderStructure();}});
 $('#manager-dialog-close').addEventListener('click',()=>dialog.close());
 $('#manager-dialog-cancel').addEventListener('click',()=>dialog.close());
 $('#manager-dialog-form').addEventListener('submit',async event=>{

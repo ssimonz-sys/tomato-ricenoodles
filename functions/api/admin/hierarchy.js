@@ -24,10 +24,10 @@ export async function onRequestGet(context){
   const hasSeries=await seriesEnabled(db);
   const [books,chapters,links]=await Promise.all([
     db.prepare('SELECT * FROM trn_books ORDER BY language,series_slug,sort_order,title').all(),
-    db.prepare('SELECT * FROM trn_chapters ORDER BY book_id,sort_order,title').all(),
+    db.prepare('SELECT * FROM trn_chapters ORDER BY book_id,created_at,id').all(),
     db.prepare('SELECT * FROM trn_section_links ORDER BY chapter_id,sort_order').all()
   ]);
-  const series=hasSeries?(await db.prepare('SELECT * FROM trn_series ORDER BY language,sort_order,title').all()).results||[]:[];
+  const series=hasSeries?(await db.prepare("SELECT t.*, COALESCE((SELECT MAX(activity_at) FROM (SELECT p.updated_at AS activity_at FROM posts p WHERE p.language=t.language AND p.status='published' AND EXISTS (SELECT 1 FROM json_each(p.collection_slugs) j WHERE j.value=t.slug) UNION ALL SELECT p.updated_at AS activity_at FROM posts p JOIN trn_section_links l ON l.post_id=p.id JOIN trn_chapters ch ON ch.id=l.chapter_id JOIN trn_books b ON b.id=ch.book_id WHERE b.language=t.language AND b.series_slug=t.slug AND p.status='published')),t.created_at) AS last_activity FROM trn_series t ORDER BY t.language,last_activity DESC,t.created_at DESC,t.slug").all()).results||[]:[];
   return send({enabled:true,seriesEnabled:hasSeries,series,books:books.results||[],chapters:chapters.results||[],links:links.results||[]});
 }
 export async function onRequestPost(context){
@@ -81,6 +81,16 @@ export async function onRequestPost(context){
         await db.prepare('DELETE FROM trn_series WHERE language=? AND slug=?').bind(language,slug).run();
         return send({ok:true});
       }
+      case 'book-reorder':{
+        const language=lang(data.language),slug=series(data.series_slug);
+        if(!slug||!Array.isArray(data.ids)||!data.ids.length||data.ids.length>500)return error('书籍排序数据无效。',400);
+        const ids=data.ids.map(uuid);
+        if(new Set(ids).size!==ids.length)return error('排序包含重复书籍。',400);
+        const current=(await db.prepare('SELECT id FROM trn_books WHERE language=? AND series_slug=?').bind(language,slug).all()).results||[];
+        if(current.length!==ids.length||current.some(b=>!ids.includes(b.id)))return error('书籍列表已改变，请刷新重试。',409);
+        await db.batch(ids.map((id,i)=>db.prepare('UPDATE trn_books SET sort_order=? WHERE id=? AND language=? AND series_slug=?').bind((i+1)*10,id,language,slug)));
+        return send({ok:true});
+      }
       case 'book-create':{
         const id=crypto.randomUUID();
         const chosenLanguage=lang(data.language),chosenSeries=series(data.series_slug);
@@ -110,14 +120,14 @@ export async function onRequestPost(context){
         const id=crypto.randomUUID(),bookId=uuid(data.book_id);
         if(!await db.prepare('SELECT id FROM trn_books WHERE id=?').bind(bookId).first())return error('找不到所属书籍。',404);
         await db.prepare('INSERT INTO trn_chapters(id,book_id,title,description,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
-          .bind(id,bookId,title(data.title),str(data.description,2000),status(data.status||'draft'),order(data.sort_order),now,now).run();
+          .bind(id,bookId,title(data.title),str(data.description,2000),status(data.status||'draft'),0,now,now).run();
         return send({ok:true,id},201);
       }
       case 'chapter-update':{
         const id=uuid(data.id);
         if(!await db.prepare('SELECT id FROM trn_chapters WHERE id=?').bind(id).first())return error('找不到章节。',404);
-        await db.prepare('UPDATE trn_chapters SET title=?,description=?,status=?,sort_order=?,updated_at=? WHERE id=?')
-          .bind(title(data.title),str(data.description,2000),status(data.status||'draft'),order(data.sort_order),now,id).run();
+        await db.prepare('UPDATE trn_chapters SET title=?,description=?,status=?,updated_at=? WHERE id=?')
+          .bind(title(data.title),str(data.description,2000),status(data.status||'draft'),now,id).run();
         return send({ok:true,id});
       }
       case 'chapter-delete':{
