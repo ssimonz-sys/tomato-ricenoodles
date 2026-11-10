@@ -63,6 +63,27 @@
     try{if(demo)p=previewPosts.find(item=>item.slug===slug);else{const resp=await fetch(`/api/posts/${encodeURIComponent(slug)}?lang=${lang}`);if(!resp.ok)throw Error('Article unavailable');p=(await resp.json()).post;}}catch{slot.innerHTML=`<div class="empty-state">${u.error}</div>`;return;}
     if(!p){slot.innerHTML=`<div class="empty-state">${u.empty}</div>`;return;}d.title=`${p.title} | ${zh?'番茄米线':'Tomato Ricenoodles'}`;const raw=demo?(zh?'（设计预览）\n\n这里是未来文章的阅读区域。发布真实文章后会显示你的正文。\n\n## 让文字拥有自己的空间\n\n文章按照原文呈现，不进行自动翻译。':'(Design preview)\n\nThis is a placeholder for your article’s body. Your published writing will replace this sample content.\n\n## A space of its own\n\nEach edition is independently written and curated.'):p.body;
     slot.innerHTML=`<header class="article-header">${demo?`<p class="eyebrow">${u.demo}</p>`:''}<p class="eyebrow">${escape(u.type[p.type]||p.type)}</p><h1>${escape(p.title)}</h1><p class="dek">${escape(p.excerpt||'')}</p><div class="post-meta"><span>${escape(displayDate(p.published_at))}</span><span>${zh?'番茄米线':'Tomato Ricenoodles'}</span></div></header>${p.cover_url?`<figure class="reader-cover"><img src="${escape(coverFor(p))}" alt=""></figure>`:''}<div class="article-body" id="reader-body">${safeMarkdown(raw)}</div>`;
+    // Derive an independent, accessible six-level outline from the rendered article headings.
+    // Keeping the text of each heading preserves the author's own Chinese numbering.
+    const readerBody=$('#reader-body');
+    const headings=[...readerBody.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+    if(headings.length>=2){
+      const toc=d.createElement('details');toc.className='reader-toc';toc.open=headings.length<=18;
+      const summary=d.createElement('summary');
+      const headingTitle=d.createElement('span');headingTitle.textContent=zh?'本文目录':'Contents';
+      const count=d.createElement('span');count.className='reader-toc-subtitle';count.textContent=zh?headings.length+' 节':headings.length+' sections';
+      summary.append(headingTitle,count);toc.append(summary);
+      const links=d.createElement('nav');links.className='reader-toc-links';
+      links.setAttribute('aria-label',zh?'文章章节目录':'Article table of contents');
+      const minLevel=Math.min(...headings.map(h=>Number(h.tagName.slice(1))));
+      headings.forEach((heading,i)=>{
+        const id='trn-section-'+(i+1);heading.id=id;
+        const link=d.createElement('a');link.href='#'+id;link.textContent=heading.textContent.trim();
+        link.style.setProperty('--depth',String(Number(heading.tagName.slice(1))-minLevel));
+        links.append(link);
+      });
+      toc.append(links);readerBody.before(toc);
+    }
     let size=Number.parseInt(localStorage.getItem('trn-size-'+lang)||'18',10);if(!Number.isFinite(size)||size<14||size>28)size=18;
     const apply=()=>d.documentElement.style.setProperty('--read-size',size+'px');apply();$('#font-less')?.addEventListener('click',()=>{size=Math.max(14,size-1);apply();localStorage.setItem('trn-size-'+lang,size);});$('#font-more')?.addEventListener('click',()=>{size=Math.min(28,size+1);apply();localStorage.setItem('trn-size-'+lang,size);});
   }
