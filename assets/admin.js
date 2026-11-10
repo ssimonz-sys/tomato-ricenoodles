@@ -3,6 +3,10 @@
   const $ = s=>document.querySelector(s);
   const state={csrf:'',posts:[],editing:null,dirty:false,preview:false,version:0,autoSaving:false};
   const form=$('#editor');
+  // Browser validation used to silently stop submit for hidden required fields.
+  // Validate explicitly, report useful errors, and always allow submit handler.
+  form.noValidate=true;
+  const placement=window.TRNPlacement?.create(form,{request:req})||null;
   window.TRNCoverUpload?.attach(form.elements.cover_url,{getCsrf:()=>state.csrf});
   let autoTimer=null;
   const startParams=new URLSearchParams(location.search);
@@ -15,7 +19,7 @@
   async function req(path,options={}) {
     const response=await fetch(path,{credentials:'same-origin',...options,headers:{'Accept':'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(state.csrf?{'X-CSRF-Token':state.csrf}:{}),...(options.headers||{})}});
     const json=await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(json.error||`HTTP ${response.status}`);
+    if(!response.ok){const err=new Error(json.error||`HTTP ${response.status}`);err.details=json;err.status=response.status;throw err;}
     return json;
   }
   async function check() {
@@ -34,6 +38,7 @@
   });
   async function load(selectedId=state.editing){
     const r=await req('/api/admin/posts');state.posts=r.posts||[];renderList();
+    if(placement)await placement.refresh();
     const found=selectedId&&state.posts.some(p=>p.id===selectedId);
     if(found)edit(selectedId);
     else if(startParams.get('new')==='1'||pendingChapter||!state.editing) {
@@ -80,44 +85,87 @@
       autoTimer=setTimeout(autoSave,3500);
     }else $('#save-status').textContent='修改暂存在本机，请手动保存已发表文章';
   }
-  async function autoSave(){
-    if(state.autoSaving||!state.dirty||form.hidden||form.elements.status.value!=='draft')return;
+  function ensureSlug(){
     const f=form.elements;
-    if(!f.title.value.trim()){
-      $('#save-status').textContent='已本机暂存，填写标题后保存到云端';return;
-    }
     if(!f.slug.value.trim()){
-      f.slug.value=f.title.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'piece-'+Date.now().toString(36);
+      const guess=f.title.value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      f.slug.value=guess||'piece-'+Date.now().toString(36);
     }
-    if(!f.slug.checkValidity()||!f.title.checkValidity())return;
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(f.slug.value)&&f.slug.value.length<=110;
+  }
+  function validateEditor(){
+    const f=form.elements;
+    if(!f.title.value.trim())throw Error('请先填写文章标题。');
+    if(f.title.value.trim().length>220)throw Error('文章标题过长。');
+    if(!ensureSlug())throw Error('文章网址只能使用小写英文字母、数字和短横线。');
+    if(!['zh','en'].includes(f.language.value))throw Error('请选择发布站点。');
+    if(!['draft','published'].includes(f.status.value))throw Error('请选择发布状态。');
+    const p=placement?.getSelection();
+    if(p?.mode==='book'&&!p.chapter_id)throw Error('这本书有多个章节，请明确选择一个章节。');
+    if(p?.mode==='book'&&!p.book_id)throw Error('请先选择所属书籍。');
+    return true;
+  }
+  function makeWorkflow(value,publishParents=false){
+    return {
+      ...(state.editing?{id:state.editing}:{}),
+      post:value,
+      placement:placement?.getSelection()||{
+        mode:value.collection_slugs?'series':'independent',
+        series_slug:(value.collection_slugs||'').split(',')[0]||'',
+        book_id:'',
+        chapter_id:''
+      },
+      publish_parents:publishParents
+    };
+  }
+  async function saveWorkflow(value,{askParents=false}={}){
+    try{
+      return await req('/api/admin/workflow',{method:'POST',body:JSON.stringify(makeWorkflow(value))});
+    }catch(e){
+      if(askParents&&e.details?.needs_parent_publication){
+        if(!confirm(e.details.error+'\n\n确定同时公开以上内容吗？')){
+          throw Error('已取消公开所属目录。你的文章没有丢失。');
+        }
+        return await req('/api/admin/workflow',{method:'POST',body:JSON.stringify(makeWorkflow(value,true))});
+      }
+      throw e;
+    }
+  }
+  let autoSavePending=null;
+  async function autoSave(){
+    if(autoSavePending||!state.dirty||form.hidden||form.elements.status.value!=='draft')return;
+    try{validateEditor();}catch(e){
+      $('#save-status').textContent='已暂存在本机，填写完整后可保存草稿';
+      return;
+    }
     const stamp=state.version,priorKey=draftKey(),isEdit=!!state.editing,value=collect();
     state.autoSaving=true;$('#save-status').textContent='正在自动保存草稿…';
-    try{
-      const result=await req(isEdit?'/api/admin/posts/'+state.editing:'/api/admin/posts',{method:isEdit?'PUT':'POST',body:JSON.stringify(value)});
-      if(!isEdit){
-        state.editing=result.id;
-        history.replaceState({},'',location.pathname+'?id='+encodeURIComponent(result.id));
-        if(pendingChapter){
-          try{
-            await req('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({op:'section-link',post_id:result.id,chapter_id:pendingChapter,sort_order:0})});
-            pendingChapter=null;
-          }catch(e){message('#editor-message','草稿已保存，但未能加入章节：'+e.message);}
+    const pending=(async()=>{
+      try{
+        const result=await saveWorkflow(value);
+        if(!isEdit){
+          state.editing=result.id;
+          history.replaceState({},'',location.pathname+'?id='+encodeURIComponent(result.id));
+          pendingChapter=null;
         }
+        const updated={...value,id:result.id,tags:value.tags.split(',').map(x=>x.trim()).filter(Boolean),
+          collection_slugs:result.placement.mode==='series'?[result.placement.series_slug]:[],
+          updated_at:new Date().toISOString()};
+        const ix=state.posts.findIndex(p=>p.id===result.id);
+        if(ix>=0)state.posts[ix]={...state.posts[ix],...updated};else state.posts.unshift(updated);
+        discardBackup(priorKey);
+        state.dirty=state.version!==stamp;
+        if(state.dirty)backup();else discardBackup();
+        $('#save-status').textContent=state.dirty?'修改待保存…':'草稿已自动保存到云端';
+        updatePublishControls();
+      }catch(e){
+        $('#save-status').textContent='自动保存失败，已保留本机副本';
+        message('#editor-message','草稿保存失败：'+e.message);
       }
-      const updated={...value,id:result.id,tags:value.tags.split(',').map(x=>x.trim()).filter(Boolean),
-        collection_slugs:value.collection_slugs.split(',').map(x=>x.trim()).filter(Boolean),updated_at:new Date().toISOString()};
-      const ix=state.posts.findIndex(p=>p.id===result.id);
-      if(ix>=0)state.posts[ix]={...state.posts[ix],...updated};else state.posts.unshift(updated);
-      discardBackup(priorKey);
-      state.dirty=state.version!==stamp;
-      if(state.dirty)backup();else discardBackup();
-      $('#save-status').textContent=state.dirty?'修改待保存…':'草稿已自动保存到云端';
-      updatePublishControls();
-    }catch(e){
-      $('#save-status').textContent='自动保存失败，本机副本已保留';
-      message('#editor-message',e.message);
-    }finally{
-      state.autoSaving=false;
+    })();
+    autoSavePending=pending;
+    try{await pending;}finally{
+      autoSavePending=null;state.autoSaving=false;
       if(state.dirty&&form.elements.status.value==='draft'){
         clearTimeout(autoTimer);autoTimer=setTimeout(autoSave,5000);
       }
@@ -133,6 +181,7 @@
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:'en',type:'essay',status:'draft'}[name]||'');
     form.elements.tags.value=p?.tags?.join(', ')||'';form.elements.collection_slugs.value=p?.collection_slugs?.join(', ')||'';
     window.TRNStudio?.load(p?.body||'');
+    placement?.load(p,{pendingChapter});
     $('#edit-label').textContent=p?'编辑文章':'新建文章';
     $('#delete-post').hidden=!p;
     $('#save-status').textContent='';$('#editor-message').textContent='';
@@ -177,36 +226,46 @@
   });
   form.addEventListener('submit',async e=>{
     e.preventDefault();clearTimeout(autoTimer);
-    if(state.autoSaving){message('#editor-message','正在自动保存，请稍后再保存。');return;}
-    message('#editor-message','正在保存…');
+    if(autoSavePending)await autoSavePending;
+    $('#editor-message').textContent='';
+    try{validateEditor();}catch(problem){
+      message('#editor-message',problem.message);
+      $('#save-status').textContent='发布前请检查填写内容';
+      document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
     const f=form.elements,priorKey=draftKey();
-    const value=collect();
-    const isEditing=!!state.editing;
+    const value=collect(),isEditing=!!state.editing;
     const original=state.posts.find(p=>p.id===state.editing);
-    if(original?.status==='published' && original.language!==value.language){
-      const oldSite=original.language==='zh'?'中文站':'英文站';
-      const newSite=value.language==='zh'?'中文站':'英文站';
-      if(!confirm(`确定将这篇已发布文章从${oldSite}移到${newSite}吗？移动后原文章链接将失效。`)){
-        message('#editor-message','已取消移动文章。');return;
-      }
+    if(original?.status==='published'&&original.language!==value.language){
+      if(!confirm('这篇文章已经发布。确定要切换到'+(value.language==='zh'?'中文站':'英文站')+'吗？旧站点的文章链接将失效。'))return;
     }
     $('#save-post').disabled=true;
+    $('#save-status').textContent='正在保存到云端…';
+    message('#editor-message','正在'+(value.status==='published'?'发布':'保存')+'…');
     try{
-      const r=await req(isEditing?`/api/admin/posts/${state.editing}`:'/api/admin/posts',{method:isEditing?'PUT':'POST',body:JSON.stringify(value)});
-      state.dirty=false;state.editing=r.id;discardBackup(priorKey);discardBackup();
-      let linkWarning='';
-      if(pendingChapter){
-        try{await req('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({op:'section-link',post_id:r.id,chapter_id:pendingChapter,sort_order:0})});pendingChapter=null;}
-        catch(linkError){linkWarning=' 正文保存成功，但加入章节失败：'+linkError.message;}
+      const result=await saveWorkflow(value,{askParents:true});
+      state.dirty=false;
+      state.editing=result.id;
+      pendingChapter=null;
+      discardBackup(priorKey);
+      discardBackup();
+      history.replaceState({},'',location.pathname+'?id='+encodeURIComponent(result.id));
+      await load(result.id);
+      const link=$('#editor-public-link');
+      if(value.status==='published'){
+        link.hidden=false;
+        link.href=result.url;
+        link.textContent='查看已发布文章 ↗';
       }
-      const savedLanguage=value.language;
-      history.replaceState({},'',location.pathname+'?id='+encodeURIComponent(r.id));
-      await load(r.id);
-      if(linkWarning)message('#editor-message',linkWarning);
-      if(!$('#editor-message').textContent.trim())message('#editor-message',value.status==='published'?('已发布到'+(savedLanguage==='zh'?'中文站':'英文站')+'。'):'私密草稿已保存。');
-      $('#save-status').textContent='已保存';updatePublishControls();
-    }catch(e){message('#editor-message',e.message);}
-    finally{$('#save-post').disabled=false;}
+      message('#editor-message',value.status==='published'?'发布成功，文章已收录到'+(value.language==='zh'?'中文站':'英文站')+'。点击下方链接查看。':'草稿保存成功，已保存到云端。');
+      $('#save-status').textContent=value.status==='published'?'发布成功':'已保存';
+      updatePublishControls();
+    }catch(problem){
+      message('#editor-message','发布或保存失败：'+problem.message);
+      $('#save-status').textContent='保存失败，请检查提示';
+      document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+    }finally{$('#save-post').disabled=false;}
   });
   $('#delete-post').addEventListener('click',async()=>{
     clearTimeout(autoTimer);
