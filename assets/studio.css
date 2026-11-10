@@ -1,0 +1,85 @@
+/* The writing desk is a long-form editor, with a quiet reading surface and a settings drawer. */
+body:has(#desk-view:not([hidden])){background:#f7f6f2}
+.desk-container{max-width:1600px;padding:18px 28px 52px}
+.desk-title{margin:13px 0 18px}
+.desk-title h1{font-size:34px;letter-spacing:-.04em}
+.desk-title .eyebrow{font-size:10px}
+.desk-grid{grid-template-columns:232px minmax(0,1fr);gap:18px}
+.draft-list{border:1px solid #e9e7e0;border-radius:8px;overflow:auto;max-height:calc(100vh - 190px);position:sticky;top:20px}
+.draft-top{background:#fbfaf7}
+.draft-top h2{font-size:17px}
+.edit-panel{border:1px solid #e8e6de;border-radius:9px;min-height:74vh;overflow:visible;box-shadow:0 8px 35px rgba(36,30,19,.025)}
+.edit-panel form{padding:0!important}
+.edit-empty{padding:190px 18px}
+.form-top{display:flex;align-items:center;justify-content:space-between;margin:0!important;padding:14px 22px;border-bottom:1px solid #e9e8e2;gap:12px;min-height:68px;flex-wrap:wrap;background:#fffdfa;border-radius:9px 9px 0 0}
+.form-top .eyebrow{letter-spacing:.08em;margin:0;color:#8e897f}
+#save-status{font-size:11px;white-space:nowrap}
+.studio-top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-left:auto}
+.studio-small-button{border:1px solid #dddcd6;background:white;border-radius:5px;padding:8px 11px;color:#575c53;font-size:12px;font-weight:600}
+.studio-small-button:hover{background:#f4f2eb}
+.studio-top-actions .editor-buttons{gap:8px}
+.studio-top-actions .primary{padding:9px 15px}
+.studio-top-actions .danger{padding:8px 11px}
+.studio-layout{display:grid;grid-template-columns:minmax(0,1fr) 215px;gap:0;align-items:start}
+.studio-paper{min-width:0;padding:42px clamp(22px,4.2vw,75px) 55px;max-width:100%}
+.studio-paper label:has(input[name="title"]){margin:0 0 4px;font-size:0}
+.studio-paper input[name="title"]{margin:0;padding:6px 0 13px;border:0;border-bottom:1px solid #eae7df;border-radius:0;background:transparent;font:500 clamp(28px,3vw,42px)/1.45 "Songti SC","Noto Serif CJK SC",Georgia,serif;color:#22251e;letter-spacing:-.02em}
+.studio-paper input[name="title"]:focus{outline:0;border-color:#bc5845}
+.studio-paper label:has(input[name="excerpt"]){margin:0 0 32px;color:#929189;font-size:0}
+.studio-paper input[name="excerpt"]{margin:0;padding:10px 0;border:0;border-bottom:1px solid #efede6;border-radius:0;background:transparent;font:15px/1.7 "Songti SC",serif;color:#737b70}
+.studio-paper input[name="excerpt"]:focus{outline:0;border-color:#bc5845}
+.studio-paper input[name="title"]::placeholder,.studio-paper input[name="excerpt"]::placeholder{color:#b0b1aa}
+.studio-heading-guide{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid #eeeae1;background:#faf9f5;border-radius:7px;padding:10px 12px;margin-bottom:8px}
+.studio-heading-guide span{color:#9a948a;font-size:11px;font-weight:600;margin-right:6px}
+.studio-heading-guide select{display:inline-block;width:auto;min-width:110px;margin:0;padding:6px 9px;background:white;border:1px solid #e2e0d8;border-radius:5px;font-size:12px;color:#4e534a}
+.studio-heading-guide button{border:1px solid #e3e0d8;background:white;border-radius:5px;padding:7px 10px;color:#555d51;font-size:11px}
+.studio-heading-guide button:hover{border-color:var(--accent);color:var(--accent)}
+.studio-editor-hint{margin:2px 0 18px;font:12px/1.7 var(--sans);color:#8a8e86}
+.studio-paper .body-top{margin:0 0 10px}
+.studio-paper .body-top label{font-size:12px;color:#53554e;font-weight:700}
+#studio-rich-editor:not(.is-ready){display:none}
+#studio-rich-editor{margin:10px 0 0}
+#studio-rich-editor .toastui-editor-defaultUI{border:1px solid #e6e5df;border-radius:7px;overflow:hidden;box-shadow:none}
+#studio-rich-editor .toastui-editor-toolbar{background:#fbfaf6;border-bottom-color:#e7e5df}
+#studio-rich-editor .toastui-editor-contents{font-family:"Songti SC","Noto Serif CJK SC",Georgia,serif;font-size:17px;line-height:1.85;color:#30352d}
+#studio-rich-editor .toastui-editor-contents h1,#studio-rich-editor .toastui-editor-contents h2{font-weight:600}
+#studio-rich-editor .toastui-editor-mode-switch{background:#faf9f5}
+.studio-source-hidden{display:none!important}
+.studio-paper textarea:not(.studio-source-hidden){font:17px/1.9 ui-monospace,SFMono-Regular,monospace;min-height:520px;border-color:#e2dfd6}
+.studio-paper-info{display:flex;gap:20px;align-items:center;flex-wrap:wrap;color:#898b83;margin-top:15px;font-size:11px}
+.studio-outline{border-left:1px solid #eeece4;min-height:550px;padding:26px 14px 24px;position:sticky;top:10px;max-height:calc(100vh - 120px);overflow:auto}
+.studio-outline-head{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-bottom:18px}
+.studio-outline-head strong{font:700 12px var(--sans);color:#4d554d}
+.studio-outline-head span{font:11px var(--sans);color:#989991}
+.studio-outline-link{--level:0;display:block;width:100%;border:0;background:none;text-align:left;color:#585e55;font:12px/1.6 "Songti SC",var(--sans);padding:7px 5px 7px calc(5px + var(--level) * 12px);overflow-wrap:anywhere;border-left:2px solid transparent}
+.studio-outline-link:hover,.studio-outline-link:focus-visible{border-left-color:var(--accent);background:#f9f6ee;color:var(--accent)}
+.studio-outline-empty,.studio-outline-tip{font:11px/1.8 var(--sans);color:#999b93}
+.studio-outline-tip{border-top:1px solid #edeae3;margin-top:22px;padding-top:15px}
+.studio-flash{background:#f8ead3;transition:background 1.5s}
+.studio-backdrop{position:fixed;inset:0;background:rgba(19,23,18,.28);z-index:30}
+.studio-backdrop[hidden]{display:none!important}
+.studio-settings{position:fixed;top:0;right:0;height:100dvh;width:min(420px,100vw);padding:0 26px 26px;overflow-y:auto;z-index:31;background:#fffdfa;box-shadow:-20px 0 70px rgba(0,0,0,.12);transform:translateX(104%);transition:transform .2s ease;visibility:hidden}
+.studio-settings.open{transform:translateX(0);visibility:visible}
+.studio-settings-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:29px 0 22px;border-bottom:1px solid #e8e6df;margin-bottom:17px}
+.studio-settings-head strong{font:600 23px "Songti SC",Georgia,serif}
+.studio-settings-head p{font-size:12px;color:var(--muted);margin:3px 0}
+.studio-settings-head button{border:0;background:none;font-size:28px;color:#85857e;padding:4px 10px}
+.studio-settings-group{padding:15px 0 16px;border-bottom:1px solid #eeece6}
+.studio-settings-group h3{font-size:11px;letter-spacing:.1em;color:#997f68;font-weight:700;margin:0 0 16px}
+.studio-settings-group label{margin-bottom:18px}
+.studio-settings-group input,.studio-settings-group select{margin-top:9px}
+.studio-settings .form-pair{display:block}
+.studio-settings .form-pair label{width:100%}
+.studio-settings .publishing-controls{display:block}
+.studio-settings .publish-state{display:block;margin-bottom:16px!important}
+.studio-settings .pair-help{margin-top:20px;font-size:11px}
+.studio-paper .markdown-preview{background:#faf9f5;max-height:none;min-height:530px;padding:30px;font:17px/1.9 "Songti SC",serif}
+.edit-panel .publish-feedback,.edit-panel .desk-message{padding:0 24px;margin-top:8px}
+.studio-focus-mode .draft-list,.studio-focus-mode .studio-outline{display:none}
+.studio-focus-mode .desk-grid{grid-template-columns:1fr}
+.studio-focus-mode .studio-layout{grid-template-columns:minmax(0,1fr)}
+.studio-focus-mode .edit-panel{max-width:1100px;margin:0 auto;width:100%}
+.studio-focus-mode .studio-paper{padding-left:clamp(30px,8vw,140px);padding-right:clamp(30px,8vw,140px)}
+@media(max-width:1180px){.studio-layout{grid-template-columns:minmax(0,1fr) 175px}.studio-paper{padding:32px 23px}.desk-grid{grid-template-columns:205px minmax(0,1fr)}}
+@media(max-width:900px){.desk-grid{grid-template-columns:1fr}.draft-list{position:static;max-height:190px}.studio-layout{grid-template-columns:minmax(0,1fr) 170px}}
+@media(max-width:650px){.desk-container{padding:14px}.desk-title h1{font-size:27px}.studio-layout{grid-template-columns:1fr}.studio-outline{min-height:0;max-height:240px;border-left:0;border-top:1px solid #eeece4;position:static;padding:17px}.studio-paper{padding:25px 16px}.form-top{padding:13px 12px}.studio-top-actions{width:100%;justify-content:space-between}.studio-top-actions .editor-buttons{margin-left:auto}.studio-top-actions .primary{padding:9px 11px}.studio-heading-guide{gap:5px}.studio-editor-hint{font-size:11px}.studio-settings{padding-left:18px;padding-right:18px}}
