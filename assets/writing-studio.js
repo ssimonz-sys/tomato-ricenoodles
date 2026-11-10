@@ -130,8 +130,10 @@
     focusFormatting.setAttribute('aria-pressed', String(visible));
   });
   document.addEventListener('keydown', event => {
+    // Capturing before the settings drawer's own Escape handler avoids exiting
+    // focus mode on the same keypress that merely closes the drawer.
     if (event.key === 'Escape' && focused && !settings.classList.contains('open')) setFocusMode(false);
-  });
+  }, true);
 
   function getMarkdown() { return rich ? rich.getMarkdown() : textarea.value; }
   function syncEditor() {
