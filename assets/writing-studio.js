@@ -58,8 +58,21 @@
     elements.filter(Boolean).forEach(el => section.append(el));
     settings.append(section);
   }
-  addSettingsGroup('发布信息', [form.querySelector('.publishing-controls')]);
-  addSettingsGroup('分类与专题', [field('type').closest('label'), field('slug').closest('label'), form.querySelector('.form-pair')]);
+  // Keep publication fields visible: hiding native required inputs blocked
+  // the submit event entirely and made clicking Publish appear to do nothing.
+  const publicationBar=document.createElement('section');
+  publicationBar.id='studio-publication-bar';
+  publicationBar.className='studio-publication-bar';
+  publicationBar.setAttribute('aria-label','发布与归档');
+  publicationBar.innerHTML='<div class="studio-publication-head"><strong>发布与归档</strong><span>选择语言和公开状态，然后把作品收进系列或书籍</span></div>';
+  const publishingControls=form.querySelector('.publishing-controls');
+  publicationBar.append(publishingControls);
+  addSettingsGroup('分类与专题', [field('type').closest('label'),form.querySelector('.form-pair')]);
+  const slugLabel=field('slug').closest('label');
+  slugLabel.classList.add('studio-slug-field');
+  publicationBar.append(slugLabel);
+  // The structured placement selector replaces manual comma-separated slugs.
+  field('collection_slugs').closest('label').hidden=true;
   addSettingsGroup('封面图片', [field('cover_url').closest('label')]);
   const help = form.querySelector('.pair-help');
   if (help) settings.append(help);
@@ -71,7 +84,15 @@
   const info = document.createElement('div');
   info.className = 'studio-paper-info';
   info.innerHTML = '<span id="studio-word-count">0 字</span><span id="studio-live-headings">0 个标题</span><span>支持长篇与附录分节</span>';
-  paper.append(title, excerpt, bodyTop, richMount, textarea, previewNode, info);
+  paper.append(title, excerpt, publicationBar, bodyTop, richMount, textarea, previewNode, info);
+  const publishFeedback=form.querySelector('.publish-feedback');
+  if(publishFeedback)publicationBar.append(publishFeedback);
+  const editorMessage=form.querySelector('#editor-message');
+  if(editorMessage){
+    editorMessage.setAttribute('aria-live','assertive');
+    editorMessage.setAttribute('role','status');
+    publicationBar.append(editorMessage);
+  }
   layout.append(paper, outline);
   topbar.after(layout);
   form.append(backdrop, settings);
@@ -98,7 +119,7 @@
   headingTools.innerHTML = '<span>长文结构</span><select id="studio-heading-level" aria-label="选择标题级别"><option value="1">一级标题</option><option value="2">二级标题</option><option value="3">三级标题</option><option value="4">四级标题</option><option value="5">五级标题</option><option value="6">六级标题</option></select><button type="button" id="studio-add-heading">插入标题</button><button type="button" id="studio-add-sample">插入分节示例</button>';
   const hint = document.createElement('p');
   hint.className = 'studio-editor-hint';
-  hint.textContent = '粘贴内容会自动去除外部格式，只保留文字、换行和空格。普通段落可对齐及缩进；设置标题后自动生成目录。';
+  hint.textContent = '粘贴内容自动去除外部格式，只保留文字和换行。正文可对齐、缩进；保存与发布请使用上方的「发布与归档」。';
   const layoutStatus=document.createElement('p');
   layoutStatus.id='studio-layout-status';
   layoutStatus.className='studio-layout-status';
