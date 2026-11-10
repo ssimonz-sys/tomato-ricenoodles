@@ -69,6 +69,8 @@ export async function onRequestPost(context){
       }
       case 'book-create':{
         const id=crypto.randomUUID();
+        const chosenLanguage=lang(data.language),chosenSeries=series(data.series_slug);
+        if(chosenSeries && await seriesEnabled(db) && !await db.prepare('SELECT slug FROM trn_series WHERE language=? AND slug=?').bind(chosenLanguage,chosenSeries).first())return error('所选系列不存在，请先在系列书架中创建。',409);
         await db.prepare('INSERT INTO trn_books(id,language,series_slug,title,description,cover_url,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)')
           .bind(id,lang(data.language),series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),order(data.sort_order),now,now).run();
         return send({ok:true,id},201);
@@ -77,6 +79,8 @@ export async function onRequestPost(context){
         const id=uuid(data.id);
         const old=await db.prepare('SELECT id,language FROM trn_books WHERE id=?').bind(id).first();
         if(!old)return error('找不到这本书。',404);
+        const chosenSeries=series(data.series_slug);
+        if(chosenSeries && await seriesEnabled(db) && !await db.prepare('SELECT slug FROM trn_series WHERE language=? AND slug=?').bind(old.language,chosenSeries).first())return error('所选系列不存在，请先创建该系列。',409);
         await db.prepare('UPDATE trn_books SET series_slug=?,title=?,description=?,cover_url=?,status=?,sort_order=?,updated_at=? WHERE id=?')
           .bind(series(data.series_slug),title(data.title),str(data.description,3000),cover(data.cover_url),status(data.status||'draft'),order(data.sort_order),now,id).run();
         return send({ok:true,id});
