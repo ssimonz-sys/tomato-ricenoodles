@@ -6,8 +6,24 @@
   // Browser validation used to silently stop submit for hidden required fields.
   // Validate explicitly, report useful errors, and always allow submit handler.
   form.noValidate=true;
-  const placement=window.TRNPlacement?.create(form,{request:req})||null;
-  window.TRNCoverUpload?.attach(form.elements.cover_url,{getCsrf:()=>state.csrf});
+  // Authentication must be wired before optional editor components initialize.
+  // A component error must never turn login into a native browser form refresh.
+  let placement=null,editorIntegrationsReady=false,editorInitError='';
+  function initializeEditor(){
+    if(editorIntegrationsReady)return;
+    editorIntegrationsReady=true;
+    try{
+      if(!window.TRNPlacement?.create)throw Error('作品归属组件未加载。');
+      placement=window.TRNPlacement.create(form,{request:req});
+    }catch(e){
+      editorInitError='作品归属组件初始化失败：'+e.message;
+      console.error(editorInitError,e);
+      placement=null;
+    }
+    try{window.TRNCoverUpload?.attach(form.elements.cover_url,{getCsrf:()=>state.csrf});}
+    catch(e){console.error('封面上传组件初始化失败',e);}
+    if(editorInitError)message('#editor-message','已登录。'+editorInitError+' 请刷新页面后再尝试保存。');
+  }
   let autoTimer=null;
   const startParams=new URLSearchParams(location.search);
   let pendingChapter=/^[0-9a-f-]{36}$/.test(startParams.get('chapter')||'')?startParams.get('chapter'):null;
@@ -23,20 +39,48 @@
     return json;
   }
   async function check() {
-    try {const r=await req('/api/admin/me');state.csrf=r.csrf;showDesk();await load(requestedId);}
-    catch {$('#login-view').hidden=false;$('#desk-view').hidden=true;}
+    let session;
+    try{session=await req('/api/admin/me');}
+    catch(e){
+      $('#login-view').hidden=false;$('#desk-view').hidden=true;
+      if(e.status!==401)message('#login-message','登录状态检查失败：'+e.message);
+      return;
+    }
+    state.csrf=session.csrf;
+    showDesk();
+    try{await load(requestedId);}
+    catch(e){message('#editor-message','已登录，但作品加载失败：'+e.message);console.error('作品加载失败',e);}
   }
   function showDesk(){ $('#login-view').hidden=true;$('#desk-view').hidden=false;$('#logout').hidden=false; }
-  $('#login-form').addEventListener('submit',async e=>{
-    e.preventDefault();message('#login-message','正在登录…');
-    try{const result=await req('/api/admin/login',{method:'POST',body:JSON.stringify({password:$('#password').value})});state.csrf=result.csrf;$('#password').value='';showDesk();await load(requestedId);}
-    catch(e){message('#login-message',e.message);}
+  const loginForm=$('#login-form');
+  loginForm.dataset.trnJsReady='1';
+  loginForm.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const submit=loginForm.querySelector('button[type="submit"]');
+    if(submit.disabled)return;
+    submit.disabled=true;
+    message('#login-message','正在验证登录…');
+    try{
+      const result=await req('/api/admin/login',{method:'POST',body:JSON.stringify({password:$('#password').value})});
+      state.csrf=result.csrf;
+      $('#password').value='';
+      showDesk();
+      message('#login-message','');
+      try{await load(requestedId);}
+      catch(loadError){
+        message('#editor-message','已成功登录，但作品读取失败：'+loadError.message);
+        console.error('登录后初始化错误',loadError);
+      }
+    }catch(authError){
+      message('#login-message','登录失败：'+authError.message);
+    }finally{submit.disabled=false;}
   });
   $('#logout').addEventListener('click',async()=>{
     try{await req('/api/admin/logout',{method:'POST',body:'{}'});}catch{}
     state.csrf='';state.posts=[];state.editing=null;$('#desk-view').hidden=true;$('#login-view').hidden=false;$('#logout').hidden=true;$('#editor').hidden=true;
   });
   async function load(selectedId=state.editing){
+    initializeEditor();
     const r=await req('/api/admin/posts');state.posts=r.posts||[];renderList();
     if(placement)await placement.refresh();
     const found=selectedId&&state.posts.some(p=>p.id===selectedId);
@@ -96,7 +140,8 @@
   }
   function validateEditor(){
     const f=form.elements;
-    if(placement&&!placement.hasLoaded())throw Error('作品目录尚未加载成功，请点击「刷新目录」后再保存，避免丢失归属信息。');
+    if(!placement)throw Error(editorInitError||'作品归属组件尚未就绪，请刷新后台。');
+    if(!placement.hasLoaded())throw Error('作品目录尚未加载成功，请点击「刷新目录」后再保存，避免丢失归属信息。');
     if(!f.title.value.trim())throw Error('请先填写文章标题。');
     if(f.title.value.trim().length>220)throw Error('文章标题过长。');
     if(!ensureSlug())throw Error('文章网址只能使用小写英文字母、数字和短横线。');
