@@ -9,7 +9,7 @@ tabs.className='hier-tabs';
 tabs.innerHTML='<button class="active" type="button" data-tab="posts">全部文章</button><button type="button" data-tab="hier">系列书架</button>';
 const toolbar=document.createElement('div');
 toolbar.className='hier-toolbar';
-toolbar.innerHTML='<button type="button" id="hier-create-series">＋ 新建系列</button><button type="button" id="hier-create-book">＋ 新建书籍</button><button type="button" id="hier-refresh">刷新</button>';
+toolbar.innerHTML='<button type="button" id="hier-init-series" hidden>启用系列管理</button><button type="button" id="hier-create-series">＋ 新建系列</button><button type="button" id="hier-create-book">＋ 新建书籍</button><button type="button" id="hier-refresh">刷新</button>';
 toolbar.hidden=true;
 const tree=document.createElement('div');tree.className='hier-tree';tree.hidden=true;
 sidebar.querySelector('.draft-top').after(tabs,toolbar);
@@ -38,12 +38,14 @@ function draw(){
     tree.innerHTML='<p class="hier-help">数据库尚未运行书、章、节升级脚本，单篇文章仍可编辑。</p><a class="hier-help" target="_blank" rel="noopener" href="https://github.com/ssimonz-sys/tomato-ricenoodles/blob/main/migrations/2026-11-09-hierarchy.sql">查看结构升级 SQL</a>';
     $('#hier-create-book').disabled=true;
     $('#hier-create-series').disabled=true;
+    $('#hier-init-series').hidden=true;
     return;
   }
   $('#hier-create-book').disabled=false;
   $('#hier-create-series').disabled=!seriesEnabled;
+  $('#hier-init-series').hidden=seriesEnabled;
   const out=[];
-  if(!seriesEnabled)out.push('<p class="hier-help">管理系列需要执行一次系列数据库升级。已有书籍功能仍可使用。</p><a class="hier-help" target="_blank" rel="noopener" href="https://github.com/ssimonz-sys/tomato-ricenoodles/blob/main/migrations/2026-11-09-series.sql">打开系列升级 SQL →</a>');
+  if(!seriesEnabled)out.push('<p class="hier-help">点击上方「启用系列管理」，即可自动创建系列数据表并保留现有系列。你原有的书籍和文章不会改变。</p>');
   function drawBook(book){
     out.push('<div class="hier-item"><strong>书 · '+esc(book.title)+'</strong><small>'+(book.status==='published'?'公开':'草稿')+'</small><span>'+action('chapter-new',book.id,'＋章')+action('book-edit',book.id,'编辑')+'</span></div>');
     const chs=chapters.filter(c=>c.book_id===book.id).sort(order);
@@ -227,6 +229,17 @@ function updateArticleSeriesOptions(){
     const option=document.createElement('option');option.value=item.slug;option.textContent=item.title+(item.status==='draft'?'（草稿）':'');articleSeriesAdd.append(option);
   }
 }
+$('#hier-init-series').addEventListener('click',async()=>{
+ if(!confirm('将为当前网站添加系列数据表，并导入现有中英文系列。此操作不会修改已发表文章和书籍，确定继续吗？'))return;
+ const btn=$('#hier-init-series');btn.disabled=true;btn.textContent='正在启用……';
+ try{
+   const defaults=['zh','en'].flatMap(lang=>(window.TRN?.collections?.[lang]||[]).map(v=>({...v,language:lang})));
+   await api({op:'series-init',defaults});
+   await reload();
+ }catch(error){
+   alert('启用失败：'+error.message+'。也可以在 Cloudflare D1 Console 中执行 GitHub 的系列升级 SQL。');
+ }finally{btn.disabled=false;btn.textContent='启用系列管理';}
+});
 $('#hier-create-series').addEventListener('click',()=>seriesEditor());
 $('#hier-create-book').addEventListener('click',()=>bookEditor());
 $('#hier-refresh').addEventListener('click',reload);
