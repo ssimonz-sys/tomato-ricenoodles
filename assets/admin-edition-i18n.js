@@ -171,6 +171,12 @@
   };
   const pieces=[
     [/^(\d+)\s*章\s*·\s*/g,'$1 chapters · '],
+    [/^(\d+)\s*章$/g,'$1 chapters'],
+    [/^(\d+)\s*节$/g,'$1 sections'],
+    [/^所属系列\s*·\s*/g,'Collection · '],
+    [/^已公开\s*·\s*/g,'Published · '],
+    [/^草稿\s*·\s*/g,'Draft · '],
+    [/^公开\s*·\s*/g,'Public · '],
     [/^(\d+)\s*节\s*·\s*/g,'$1 sections · '],
     [/^(\d+)\s*本书/g,'$1 books'],
     [/^(\d+)\s*本$/g,'$1 books'],
@@ -193,9 +199,18 @@
     [/^创建书籍失败：/g,'Cannot create book: '],
     [/^上传失败：/g,'Upload failed: '],
     [/^发布或保存失败：/g,'Save or publish failed: '],
+    [/^发布到英文站$/g,'Publish to English edition'],
+    [/^文章将公开发布到英文站。$/g,'This post will be published to the English edition.'],
+    [/^将保存为英文站的私密草稿，读者无法查看。$/g,'This will be saved privately as an English draft.'],
+    [/^发布成功，文章已收录到英文站。点击下方链接查看。$/g,'Published to the English edition. Open the link below to view it.'],
+    [/^已成功登录，但作品读取失败：/g,'Signed in, but could not load posts: '],
+    [/^已登录，但作品加载失败：/g,'Signed in, but could not load posts: '],
+    [/^(.+)\s*·\s*草稿$/g,'$1 · Draft'],
+    [/^(.+)\s*·\s*公开$/g,'$1 · Public'],
+    [/^(.+)\s*·\s*已发布$/g,'$1 · Published'],
     [/^保存失败：/g,'Save failed: ']
   ];
-  const skipSelector='.toastui-editor-contents,.ProseMirror,.CodeMirror,.toastui-editor-md-container,.toastui-editor-ww-container,.markdown-preview,.studio-outline-items,.manager-article-main h3,.manager-article-main p,.manager-comment-row p,.manager-series-copy h3,.manager-series-copy p,.manager-book-details-header h2,.manager-book-details-header p';
+  const skipSelector='.toastui-editor-contents,.ProseMirror,.CodeMirror,.toastui-editor-md-container,.toastui-editor-ww-container,.markdown-preview,.studio-outline-items,#studio-outline-items,.manager-article-main h3,.manager-article-main p,.manager-comment-row p,.manager-series-copy h3,.manager-series-copy p,.manager-book-details-header h2,.manager-book-details-header p';
   function transform(value){
     if(!value||!(/[\u3400-\u9fff]/.test(value)))return value;
     if(Object.hasOwn(dictionary,value))return dictionary[value];
