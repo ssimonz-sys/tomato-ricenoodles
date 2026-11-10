@@ -96,6 +96,7 @@
   }
   function validateEditor(){
     const f=form.elements;
+    if(placement&&!placement.hasLoaded())throw Error('作品目录尚未加载成功，请点击「刷新目录」后再保存，避免丢失归属信息。');
     if(!f.title.value.trim())throw Error('请先填写文章标题。');
     if(f.title.value.trim().length>220)throw Error('文章标题过长。');
     if(!ensureSlug())throw Error('文章网址只能使用小写英文字母、数字和短横线。');
