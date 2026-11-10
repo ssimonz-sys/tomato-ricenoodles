@@ -85,7 +85,7 @@
       toc.append(links);readerBody.before(toc);
     }
     if(!demo)window.TRNReaderEngagement?.mount(p);
-    let size=Number.parseInt(localStorage.getItem('trn-size-'+lang)||'18',10);if(!Number.isFinite(size)||size<14||size>28)size=18;
+    let size=Number.parseInt(localStorage.getItem('trn-size-'+lang)||'20',10);if(!Number.isFinite(size)||size<14||size>28)size=20;
     const apply=()=>d.documentElement.style.setProperty('--read-size',size+'px');apply();$('#font-less')?.addEventListener('click',()=>{size=Math.max(14,size-1);apply();localStorage.setItem('trn-size-'+lang,size);});$('#font-more')?.addEventListener('click',()=>{size=Math.min(28,size+1);apply();localStorage.setItem('trn-size-'+lang,size);});
   }
   async function boot(){

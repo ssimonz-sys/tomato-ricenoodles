@@ -189,3 +189,33 @@ html[data-admin-theme="dark"] .studio-focus-mode #studio-rich-editor .toastui-ed
   .studio-focus-mode .studio-paper {padding:38px 20px 70px;}
   .studio-focus-mode #studio-rich-editor .toastui-editor-defaultUI {height:max(66vh,530px)!important;min-height:530px;}
 }
+
+/* Spacious article paragraphs for the regular editor and focus mode. */
+#studio-rich-editor .toastui-editor-contents,
+#studio-rich-editor .toastui-editor-ww-container .ProseMirror,
+#studio-rich-editor .toastui-editor-md-container .CodeMirror,
+#studio-rich-editor .toastui-editor-md-container .CodeMirror pre,
+#studio-rich-editor .toastui-editor-md-preview,
+.studio-paper .markdown-preview,
+.studio-paper textarea:not(.studio-source-hidden) {
+  font-size:20px;
+  line-height:2;
+}
+#studio-rich-editor .toastui-editor-ww-container .ProseMirror p,
+#studio-rich-editor .toastui-editor-contents p,
+#studio-rich-editor .toastui-editor-md-preview p,
+.studio-paper .markdown-preview p {
+  margin-top:0;
+  margin-bottom:1.4em;
+  line-height:2;
+}
+#studio-rich-editor .toastui-editor-ww-container .ProseMirror p:last-child,
+#studio-rich-editor .toastui-editor-contents p:last-child,
+#studio-rich-editor .toastui-editor-md-preview p:last-child,
+.studio-paper .markdown-preview p:last-child { margin-bottom:0; }
+.studio-focus-mode #studio-rich-editor .toastui-editor-ww-container .ProseMirror,
+.studio-focus-mode #studio-rich-editor .toastui-editor-md-container .CodeMirror,
+.studio-focus-mode .studio-paper textarea:not(.studio-source-hidden) {
+  font-size:20px;
+  line-height:2;
+}

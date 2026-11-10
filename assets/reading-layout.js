@@ -26,7 +26,35 @@
       const prefix=leading[1].replace(/ /g,'&nbsp;').replace(/\t/g,'&nbsp;&nbsp;&nbsp;&nbsp;');
       processed.push(prefix+text);
     }
-    return processed.join('\n');
+    // Keep prose newlines as separate paragraphs while preserving structural
+    // Markdown and fenced code. Original stored Markdown is untouched.
+    const output=[];
+    let fenceType='',previousKind='blank',previousLine='';
+    for(let i=0;i<processed.length;i++){
+      const line=processed[i],original=rows[i];
+      const marker=original.match(/^ {0,3}(`{3,}|~{3,})/);
+      let kind='prose';
+      if(marker)kind='fence';
+      else if(fenceType)kind='code';
+      else if(!original.trim())kind='blank';
+      else if(/^ {0,3}(?:[-*+]\s|\d+[.)]\s)/.test(original))kind='list';
+      else if(/^ {0,3}>\s?/.test(original))kind='quote';
+      else if(/^ {0,3}\|/.test(original)||/^\s*:?-{3,}:?\s*(?:\||$)/.test(original))kind='table';
+      else if(/^ {0,3}#{1,6}\s/.test(original)||/^ {0,3}(?:={3,}|-{3,})\s*$/.test(original))kind='heading';
+      else if(/^ {0,3}</.test(original)&&!/^ {0,3}<span data-trn-(?:align|indent)=/.test(original))kind='html';
+      else if(/^(?: {2,}|\t)/.test(original)&&previousKind==='list')kind='list';
+      const hardBreak=/(?: {2,}|\\)$/.test(previousLine);
+      if(previousKind==='prose'&&kind==='prose'&&!hardBreak)output.push('');
+      output.push(line);
+      if(marker){
+        const mark=marker[1][0];
+        if(!fenceType)fenceType=mark;
+        else if(fenceType===mark)fenceType='';
+      }
+      previousKind=kind;
+      previousLine=original;
+    }
+    return output.join('\n');
   }
   function render(markdown,marked,DOMPurify){
     if(!marked||!DOMPurify)return null;
