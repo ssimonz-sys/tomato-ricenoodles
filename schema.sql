@@ -126,3 +126,13 @@ CREATE INDEX IF NOT EXISTS idx_trn_comments_moderation
 ON trn_comments(status,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trn_comments_ip_rate
 ON trn_comments(ip_hash,created_at DESC);
+
+
+-- Covers live in existing D1 storage; no R2 subscription is required.
+CREATE TABLE IF NOT EXISTS trn_cover_images (
+  filename TEXT PRIMARY KEY,
+  content_type TEXT NOT NULL,
+  image_data BLOB NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
