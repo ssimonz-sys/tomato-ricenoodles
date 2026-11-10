@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $=s=>document.querySelector(s);
-const state={csrf:'',posts:[],series:[],books:[],chapters:[],links:[],enabled:false,seriesEnabled:false,lang:'zh',tab:'structure'};
+const state={csrf:'',posts:[],series:[],books:[],chapters:[],links:[],enabled:false,seriesEnabled:false,lang:'zh',tab:'structure',category:'all',publication:'all',commentFilter:'pending',engagementEnabled:false,comments:[],stats:[]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const types={essay:'政论与随笔',fiction:'小说',poetry:'诗歌',note:'笔记与杂记'};
 const langLabel=l=>l==='zh'?'中文站':'英文站';
@@ -41,14 +41,15 @@ async function verify(){
 }
 async function refresh(){
   try{
-    const [hierarchy,entries]=await Promise.all([
-      request('/api/admin/hierarchy'),request('/api/admin/posts')
+    const [hierarchy,entries,engagement]=await Promise.all([
+      request('/api/admin/hierarchy'),request('/api/admin/posts'),request('/api/admin/comments')
     ]);
     state.enabled=!!hierarchy.enabled;
     state.seriesEnabled=!!hierarchy.seriesEnabled;
     state.series=state.seriesEnabled?hierarchy.series||[]:['zh','en'].flatMap(lang=>(window.TRN?.collections?.[lang]||[]).map((item,i)=>({...item,language:lang,status:'published',sort_order:i*10})));
     state.books=hierarchy.books||[];state.chapters=hierarchy.chapters||[];
     state.links=hierarchy.links||[];state.posts=entries.posts||[];
+    state.engagementEnabled=!!engagement.enabled;state.comments=engagement.comments||[];state.stats=engagement.stats||[];
     render();note('');
   }catch(e){note('读取作品失败：'+e.message,true);}
 }
@@ -72,11 +73,19 @@ function render(){
   $('#manager-add-article').href=writeLink(null,state.lang);
   $('#manager-tab-structure').classList.toggle('active',state.tab==='structure');
   $('#manager-tab-articles').classList.toggle('active',state.tab==='articles');
+  $('#manager-tab-comments').classList.toggle('active',state.tab==='comments');
   $('#manager-tab-structure').setAttribute('aria-selected',String(state.tab==='structure'));
   $('#manager-tab-articles').setAttribute('aria-selected',String(state.tab==='articles'));
+  $('#manager-tab-comments').setAttribute('aria-selected',String(state.tab==='comments'));
   $('#manager-structure').hidden=state.tab!=='structure';
   $('#manager-articles').hidden=state.tab!=='articles';
-  renderStructure();renderArticles();
+  $('#manager-comments').hidden=state.tab!=='comments';
+  $('#manager-init-engagement').hidden=state.engagementEnabled;
+  $('#manager-pending-count').textContent=state.comments.filter(c=>c.status==='pending').length||'';
+  $('#manager-category-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.category===state.category));
+  $('#manager-publication-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.status===state.publication));
+  $('#manager-comment-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.commentStatus===state.commentFilter));
+  renderStructure();renderArticles();renderComments();
 }
 function renderStructure(){
   const slot=$('#manager-series-list'),standalone=$('#manager-standalone');
@@ -130,14 +139,48 @@ function renderChapter(chapter){
 function renderArticles(){
   const text=($('#manager-search').value||'').trim().toLowerCase();
   const onlyUnlinked=$('#manager-only-unlinked').checked;
-  const result=state.posts.filter(p=>p.language===state.lang&&(!onlyUnlinked||!sectionLink(p.id))&&(!text||[p.title,p.slug,...(p.tags||[])].some(x=>String(x).toLowerCase().includes(text))));
+  const result=state.posts.filter(p=>p.language===state.lang&&(state.category==='all'||p.type===state.category)&&(state.publication==='all'||p.status===state.publication)&&(!onlyUnlinked||!sectionLink(p.id))&&(!text||[p.title,p.slug,...(p.tags||[])].some(x=>String(x).toLowerCase().includes(text))));
   $('#manager-article-list').innerHTML=result.length?result.map(p=>{
     const relation=sectionLink(p.id);
     const chapter=relation&&chapterFor(relation.chapter_id);
     const book=chapter&&bookFor(chapter.book_id);
     const where=book?'收录：'+book.title+' / '+chapter.title:'独立文章';
-    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+button('article-link',p.id,relation?'调整章节':'加入章节')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
+    const metrics=state.stats.find(s=>s.post_id===p.id);
+    const stats=metrics?' · '+metrics.views+' 阅读 · '+metrics.likes+' 点赞 · '+metrics.comments+' 评论':' · '+(p.views||0)+' 阅读 · '+(p.likes||0)+' 点赞';
+    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字'+stats+'</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+button('article-link',p.id,relation?'调整章节':'加入章节')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
   }).join(''):'<div class="manager-empty">没有找到符合条件的文章。</div>';
+}
+function renderComments(){
+ const root=$('#manager-comments-list');
+ if(!state.engagementEnabled){
+   root.innerHTML='<div class="manager-empty">尚未启用阅读量、点赞和匿名评论。请点击上方按钮初始化数据库。</div>';
+   return;
+ }
+ const matches=state.comments.filter(c=>(state.commentFilter==='all'||c.status===state.commentFilter)&&(c.language===state.lang));
+ root.innerHTML=matches.length?matches.map(c=>
+ '<article class="manager-comment-row"><div><div class="manager-article-meta"><span>'+esc(c.title||'文章')+'</span><span>'+esc(c.language==='zh'?'中文站':'英文站')+'</span><span>'+esc({pending:'待审核',approved:'已公开',rejected:'已拒绝'}[c.status]||c.status)+'</span></div>'+
+ '<p>'+esc(c.content)+'</p><small>'+new Date(c.created_at*1000).toLocaleString('zh-CN')+'</small></div>'+
+ '<div class="manager-article-actions">'+(c.status!=='approved'?button('comment-approve',c.id,'批准',''):'')+
+ (c.status!=='rejected'?button('comment-reject',c.id,'拒绝',''):'')+
+ button('comment-delete',c.id,'删除','danger')+'</div></article>'
+ ).join(''):'<div class="manager-empty">这一栏还没有评论。</div>';
+}
+async function moderate(action,id){
+ if(action==='delete'&&!confirm('永久删除这条评论吗？'))return;
+ try{
+  await request('/api/admin/comments',{method:'POST',body:JSON.stringify({action,id})});
+  await refresh();
+ }catch(error){note('评论操作失败：'+error.message,true);}
+}
+async function initEngagement(){
+ if(state.engagementEnabled)return;
+ if(!confirm('启用独立的阅读统计、点赞和匿名评论数据库？不会修改已有文章。'))return;
+ const btn=$('#manager-init-engagement');btn.disabled=true;
+ try{
+  await request('/api/admin/comments',{method:'POST',body:JSON.stringify({action:'initialize'})});
+  await refresh();note('互动功能已启用。每篇已发布的文章都可以显示阅读量、点赞和匿名评论。');
+ }catch(error){note('初始化失败：'+error.message,true);}
+ finally{btn.disabled=false;}
 }
 const dialog=$('#manager-dialog'),fields=$('#manager-dialog-fields');
 let saveHandler=null;
@@ -241,6 +284,9 @@ async function act(action,id){
  const series=state.series.find(s=>s.language===code&&s.slug===slug);
  const book=bookFor(id),chapter=chapterFor(id),post=postFor(id);
  switch(action){
+  case 'comment-approve':await moderate('approve',id);break;
+  case 'comment-reject':await moderate('reject',id);break;
+  case 'comment-delete':await moderate('delete',id);break;
   case 'series-init':await ensureSeries();break;
   case 'series-new':await seriesEditor();break;
   case 'series-edit':if(series)await seriesEditor(series);break;
@@ -281,6 +327,11 @@ $('#manager-add-book').addEventListener('click',()=>act('book-new',''));
 $('#manager-reload').addEventListener('click',refresh);
 $('#manager-tab-structure').addEventListener('click',()=>{state.tab='structure';render();});
 $('#manager-tab-articles').addEventListener('click',()=>{state.tab='articles';render();});
+$('#manager-tab-comments').addEventListener('click',()=>{state.tab='comments';render();});
+$('#manager-category-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-category]');if(!button)return;state.category=button.dataset.category;render();});
+$('#manager-publication-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-status]');if(!button)return;state.publication=button.dataset.status;render();});
+$('#manager-comment-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-comment-status]');if(!button)return;state.commentFilter=button.dataset.commentStatus;render();});
+$('#manager-init-engagement').addEventListener('click',initEngagement);
 $('#manager-language').addEventListener('change',value=>{state.lang=value.target.value;render();});
 $('#manager-search').addEventListener('input',renderArticles);
 $('#manager-only-unlinked').addEventListener('change',renderArticles);

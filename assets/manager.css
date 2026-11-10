@@ -131,3 +131,16 @@ html[data-admin-theme="dark"] .manager-header-link{color:#c6d8c5}
  .manager-section-row .manager-actions{width:100%}
  .manager-dialog header,#manager-dialog-fields,.manager-dialog footer{padding-left:16px;padding-right:16px}
 }
+
+/* Category and publication tabs, analogous to public archive shelves. */
+.manager-article-filters{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;margin:20px 0 16px}
+.manager-category-tabs,.manager-publication-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.manager-category-tabs button,.manager-publication-tabs button{padding:8px 12px;border-radius:6px;background:var(--white);color:var(--muted);border:1px solid var(--border);font:600 12px var(--sans);cursor:pointer}
+.manager-category-tabs button.active,.manager-publication-tabs button.active{color:var(--accent);border-color:var(--accent);background:var(--paper)}
+.manager-comments-list{display:grid;gap:12px;margin-top:18px}
+.manager-comment-row{display:flex;gap:20px;justify-content:space-between;align-items:flex-start;padding:22px 26px;background:var(--white);border:1px solid var(--border);border-radius:6px}
+.manager-comment-row>div:first-child{min-width:0;flex:1}
+.manager-comment-row p{font:15px/1.8 Georgia,"Songti SC",serif;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0}
+.manager-comment-row small{font:11px var(--sans);color:var(--muted)}
+#manager-pending-count:not(:empty){background:var(--accent);color:white;font:600 10px var(--sans);padding:2px 6px;border-radius:10px}
+@media(max-width:700px){.manager-comment-row{flex-wrap:wrap}.manager-comment-row>.manager-article-actions{width:100%;justify-content:flex-start}}

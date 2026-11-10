@@ -47,7 +47,8 @@
 <div class="manager-controls">
 <div class="manager-tabs" role="tablist" aria-label="管理范围">
 <button id="manager-tab-structure" type="button" role="tab" aria-selected="true" class="active">系列与书籍</button>
-<button id="manager-tab-articles" type="button" role="tab" aria-selected="false">全部文章</button>
+<button id="manager-tab-articles" type="button" role="tab" aria-selected="false">文章与草稿</button>
+<button id="manager-tab-comments" type="button" role="tab" aria-selected="false">评论审核 <span id="manager-pending-count"></span></button>
 </div>
 <div class="manager-controls-right">
 <label for="manager-language">语言站点</label>
@@ -66,8 +67,24 @@
 </section>
 <section id="manager-articles" aria-label="文章列表" hidden>
 <div class="manager-section-top"><div><h2>文章列表</h2><p>独立随笔、诗歌、小说及已经编入章节的小节</p></div><a id="manager-add-article" href="/admin/?new=1&lang=zh" class="primary">＋ 写新文章</a></div>
+<div class="manager-article-filters"><div class="manager-category-tabs" id="manager-category-tabs" aria-label="文章分类">
+<button type="button" class="active" data-category="all">全部</button>
+<button type="button" data-category="essay">政论与随笔</button>
+<button type="button" data-category="fiction">小说</button>
+<button type="button" data-category="poetry">诗歌</button>
+<button type="button" data-category="note">笔记与杂记</button>
+</div><div class="manager-publication-tabs" id="manager-publication-tabs" aria-label="发布状态">
+<button type="button" class="active" data-status="all">全部作品</button><button type="button" data-status="draft">草稿</button><button type="button" data-status="published">已发布</button>
+</div></div>
 <div class="manager-search-line"><input id="manager-search" type="search" placeholder="搜索标题、网址标识或标签" aria-label="搜索文章"><label><input id="manager-only-unlinked" type="checkbox">仅查看独立文章</label></div>
 <div id="manager-article-list" class="manager-article-list"></div>
+</section>
+<section id="manager-comments" aria-label="匿名评论审核" hidden>
+<div class="manager-section-top"><div><h2>匿名评论</h2><p>所有评论须经批准才会公开，读者不需要登录或提供昵称。</p></div>
+<button id="manager-init-engagement" type="button" class="primary" hidden>启用阅读量、点赞与评论</button>
+</div>
+<div class="manager-publication-tabs" id="manager-comment-tabs"><button type="button" data-comment-status="pending" class="active">待审核</button><button type="button" data-comment-status="approved">已公开</button><button type="button" data-comment-status="rejected">已拒绝</button><button type="button" data-comment-status="all">全部</button></div>
+<div id="manager-comments-list" class="manager-comments-list"></div>
 </section>
 </section>
 </main>
