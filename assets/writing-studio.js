@@ -144,6 +144,19 @@
   function syncEditor() {
     if (loading || !rich) return;
     const markdown = rich.getMarkdown();
+    // A round-trip through WYSIWYG may discard custom inline HTML markers.
+    // Restore the source before any autosave could overwrite these layouts.
+    if(!rich.isMarkdownMode()&&/<span data-trn-(?:align|indent)=/.test(textarea.value)&&
+       !/<span data-trn-(?:align|indent)=/.test(markdown)){
+      const preserved=textarea.value;
+      loading=true;
+      rich.changeMode('markdown',true);
+      rich.setMarkdown(preserved,false);
+      loading=false;
+      const status=$('#studio-layout-status');
+      if(status)status.textContent='为保护段落格式，已返回 Markdown 排版模式。';
+      return;
+    }
     if (textarea.value !== markdown) {
       textarea.value = markdown;
       textarea.dispatchEvent(new Event('input', {bubbles: true}));
@@ -319,8 +332,9 @@
     }
     $('#studio-heading-count').textContent = headings.length+' 节';
     $('#studio-live-headings').textContent = headings.length+' 个标题';
-    const countHan = (markdown.match(/[\u3400-\u9fff]/g)||[]).length;
-    const countWords = (markdown.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g)||[]).length;
+    const plain=markdown.replace(/<span data-trn-(?:align|indent)="(?:left|center|right|[1-4])"><\/span>/g,'');
+    const countHan = (plain.match(/[\u3400-\u9fff]/g)||[]).length;
+    const countWords = (plain.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g)||[]).length;
     $('#studio-word-count').textContent = (countHan+countWords).toLocaleString('zh-CN')+' 字';
   }
   function scheduleOutline() { clearTimeout(outlineTimer); outlineTimer = setTimeout(refreshOutline,220); }
@@ -331,12 +345,12 @@
     loading = true;
     textarea.value = markdown || '';
     if (rich) {
-      rich.setMarkdown(markdown || '', false);
-      // Keep the source intact for paragraphs containing custom layout markers.
+      // Switch first: converting through WYSIWYG could remove inline markers.
       if(/<span data-trn-(?:align|indent)=/.test(markdown||'')){
-        rich.changeMode('markdown',true);
+        if(!rich.isMarkdownMode())rich.changeMode('markdown',true);
         rich.changePreviewStyle('vertical');
       }
+      rich.setMarkdown(markdown || '', false);
     }
     if (readingPreview) {
       readingPreview = false;
