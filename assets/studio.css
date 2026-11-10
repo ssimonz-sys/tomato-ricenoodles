@@ -83,3 +83,35 @@ body:has(#desk-view:not([hidden])){background:#f7f6f2}
 @media(max-width:1180px){.studio-layout{grid-template-columns:minmax(0,1fr) 175px}.studio-paper{padding:32px 23px}.desk-grid{grid-template-columns:205px minmax(0,1fr)}}
 @media(max-width:900px){.desk-grid{grid-template-columns:1fr}.draft-list{position:static;max-height:190px}.studio-layout{grid-template-columns:minmax(0,1fr) 170px}}
 @media(max-width:650px){.desk-container{padding:14px}.desk-title h1{font-size:27px}.studio-layout{grid-template-columns:1fr}.studio-outline{min-height:0;max-height:240px;border-left:0;border-top:1px solid #eeece4;position:static;padding:17px}.studio-paper{padding:25px 16px}.form-top{padding:13px 12px}.studio-top-actions{width:100%;justify-content:space-between}.studio-top-actions .editor-buttons{margin-left:auto}.studio-top-actions .primary{padding:9px 11px}.studio-heading-guide{gap:5px}.studio-editor-hint{font-size:11px}.studio-settings{padding-left:18px;padding-right:18px}}
+
+/* Writing studio: accessible, always-clickable paragraph tools.
+   The built-in indent/outdent actions only work for list items. */
+#studio-rich-editor .studio-paragraph-tool{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;margin:0;border:0;border-radius:4px;
+  color:#444b43;background:transparent;font:700 18px/1 ui-sans-serif,system-ui,sans-serif;
+  cursor:pointer;flex-shrink:0
+}
+#studio-rich-editor .studio-paragraph-tool:hover,
+#studio-rich-editor .studio-paragraph-tool:focus-visible{
+  background:#eaece5;color:#92513b;outline:1px solid #c7cec1
+}
+.studio-layout-status{min-height:16px;margin:0 0 4px;color:var(--muted);font:11px/1.5 var(--sans)}
+html[data-admin-theme="dark"] #studio-rich-editor .studio-paragraph-tool{color:#d8e1d3}
+html[data-admin-theme="dark"] #studio-rich-editor .studio-paragraph-tool:hover{background:#475148}
+/* Paragraph layout markers are invisible spans preserved in the saved Markdown.
+   :has() is supported by current Chrome, Safari, Firefox and mobile browsers. */
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-align="left"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-align="left"]){text-align:left}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-align="center"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-align="center"]){text-align:center}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-align="right"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-align="right"]){text-align:right}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-indent="1"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-indent="1"]){padding-inline-start:2em}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-indent="2"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-indent="2"]){padding-inline-start:4em}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-indent="3"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-indent="3"]){padding-inline-start:6em}
+#studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-indent="4"]),
+.studio-paper .markdown-preview p:has(> span[data-trn-indent="4"]){padding-inline-start:8em}

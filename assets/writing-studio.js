@@ -84,8 +84,13 @@
   headingTools.innerHTML = '<span>长文结构</span><select id="studio-heading-level" aria-label="选择标题级别"><option value="1">一级标题</option><option value="2">二级标题</option><option value="3">三级标题</option><option value="4">四级标题</option><option value="5">五级标题</option><option value="6">六级标题</option></select><button type="button" id="studio-add-heading">插入标题</button><button type="button" id="studio-add-sample">插入分节示例</button>';
   const hint = document.createElement('p');
   hint.className = 'studio-editor-hint';
-  hint.textContent = '直接撰写正文，使用工具栏排版。设置一至六级标题后，大纲与公开文章目录会自动生成。';
-  bodyTop.before(headingTools, hint);
+  hint.textContent = '普通段落可左对齐、居中、右对齐，也可增加或减少缩进。列表仍可通过 Tab 缩进；设置标题后会自动生成目录。';
+  const layoutStatus=document.createElement('p');
+  layoutStatus.id='studio-layout-status';
+  layoutStatus.className='studio-layout-status';
+  layoutStatus.setAttribute('role','status');
+  layoutStatus.setAttribute('aria-live','polite');
+  bodyTop.before(headingTools,hint,layoutStatus);
 
   function closeSettings() {
     settings.classList.remove('open');
@@ -145,6 +150,74 @@
     }
     scheduleOutline();
   }
+  function createLayoutTool(name,label,glyph,command){
+    const control=document.createElement('button');
+    control.type='button';
+    control.className='studio-paragraph-tool';
+    control.textContent=glyph;
+    control.setAttribute('aria-label',label);
+    control.title=label;
+    // Retain the selection while the toolbar button is clicked.
+    control.addEventListener('mousedown',event=>event.preventDefault());
+    control.addEventListener('click',event=>{event.preventDefault();applyParagraphLayout(command);});
+    return {name,el:control};
+  }
+
+  function applyParagraphLayout(command){
+    const formatter=window.TRNParagraphLayout;
+    if(!formatter)return;
+    if(rich){
+      if(!rich.isMarkdownMode()){
+        // Markdown positions are required for a lossless source-level edit.
+        // TOAST UI's native indent/outdent are enabled only inside lists.
+        let converted=null;
+        try{
+          const [from,to]=rich.getSelection();
+          converted=rich.convertPosToMatchEditorMode(from,to,'markdown');
+        }catch{}
+        rich.changeMode('markdown',true);
+        if(Array.isArray(converted)&&Array.isArray(converted[0])&&Array.isArray(converted[1])){
+          try{rich.setSelection(converted[0],converted[1]);}catch{}
+        }
+        rich.changePreviewStyle('vertical');
+      }
+      const selection=rich.getSelection();
+      const original=rich.getMarkdown();
+      const result=formatter.apply(original,selection,command);
+      if(!result.changes.length){
+        const notice=$('#studio-layout-status');
+        if(notice)notice.textContent='请将光标放在普通正文段落中，标题、列表及代码块不支持此项操作。';
+        return;
+      }
+      try{
+        // Replace from bottom to top to preserve line positions and the undo stack.
+        for(const change of result.changes.slice().reverse()){
+          rich.replaceSelection(change.next,[change.line,1],[change.line,change.old.length+1]);
+        }
+      }catch(error){
+        // Preserve the formatted source even if an older editor build rejects
+        // replaceSelection's line/column arguments.
+        rich.setMarkdown(result.markdown,false);
+      }
+      const next=rich.getMarkdown();
+      if(next!==result.markdown)rich.setMarkdown(result.markdown,false);
+      rich.focus();
+      syncEditor();
+    }else{
+      const raw=textarea.value;
+      const from=raw.slice(0,textarea.selectionStart).split('\n').length;
+      const to=raw.slice(0,textarea.selectionEnd).split('\n').length;
+      const range=[[from,1],[to,textarea.selectionEnd===textarea.selectionStart?1:2]];
+      const result=formatter.apply(raw,range,command);
+      if(!result.changes.length)return;
+      textarea.value=result.markdown;
+      textarea.dispatchEvent(new Event('input',{bubbles:true}));
+      textarea.focus();
+    }
+    const notice=$('#studio-layout-status');
+    if(notice)notice.textContent='段落格式已应用，保存文章后会同步到读者页面。';
+  }
+
   function initRich() {
     if (rich || !window.toastui || !window.toastui.Editor) return;
     try {
@@ -154,11 +227,24 @@
         height: '650px',
         minHeight: '440px',
         initialEditType: 'wysiwyg',
-        previewStyle: 'tab',
+        previewStyle: 'vertical',
         language: 'zh-CN',
         usageStatistics: false,
         hideModeSwitch: false,
-        toolbarItems: [['heading','bold','italic','strike'],['hr','quote'],['ul','ol','indent','outdent'],['table','link'],['code','codeblock']],
+        toolbarItems: [
+          ['heading','bold','italic','strike'],
+          ['hr','quote'],
+          ['ul','ol',createLayoutTool('trn-indent','增加段落缩进','⇥','indent'),createLayoutTool('trn-outdent','减少段落缩进','⇤','outdent')],
+          [createLayoutTool('trn-left','左对齐','☷','left'),createLayoutTool('trn-center','居中','≡','center'),createLayoutTool('trn-right','右对齐','☰','right')],
+          ['table','link'],['code','codeblock']
+        ],
+        customHTMLRenderer:{
+          htmlInline:{
+            span(node,{entering}){
+              return entering?{type:'openTag',tagName:'span',attributes:node.attrs}:{type:'closeTag',tagName:'span'};
+            }
+          }
+        },
         hooks: {addImageBlobHook: () => { alert('请先上传图片并通过图片网址插入，目前不支持直接粘贴图片文件。'); return false; }}
       });
       rich.on('change', syncEditor);
@@ -244,7 +330,14 @@
     initRich();
     loading = true;
     textarea.value = markdown || '';
-    if (rich) rich.setMarkdown(markdown || '', false);
+    if (rich) {
+      rich.setMarkdown(markdown || '', false);
+      // Keep the source intact for paragraphs containing custom layout markers.
+      if(/<span data-trn-(?:align|indent)=/.test(markdown||'')){
+        rich.changeMode('markdown',true);
+        rich.changePreviewStyle('vertical');
+      }
+    }
     if (readingPreview) {
       readingPreview = false;
       $('#markdown-preview').hidden = true;
