@@ -1,0 +1,133 @@
+/* Dedicated work management screen. The writing editor keeps its own page. */
+body.manager-page {background:var(--bg);color:var(--ink);min-height:100vh}
+.manager-page [hidden]{display:none!important}
+.manager-header-link{margin-left:auto;color:var(--olive);font:600 12px var(--sans);white-space:nowrap}
+.manager-header-link:hover{text-decoration:underline;text-underline-offset:4px}
+.manager-container{width:min(1510px,calc(100% - 64px));margin:0 auto;padding:48px 0 120px}
+.manager-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:32px}
+.manager-heading h1{font:normal clamp(34px,4.5vw,58px)/1.18 Georgia,"Songti SC",serif;letter-spacing:-.04em;margin:9px 0 12px}
+.manager-heading>div>p:last-child{font:14px/1.8 var(--sans);color:var(--muted);max-width:700px}
+.manager-heading-actions,.manager-actions,.manager-top-buttons{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.manager-heading-actions{justify-content:flex-end}
+.manager-outline-button,.manager-mini{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--white);color:var(--ink);border-radius:5px;font:600 12px/1.3 var(--sans);padding:11px 15px;white-space:nowrap;text-decoration:none;cursor:pointer}
+.manager-outline-button:hover,.manager-mini:hover{border-color:var(--accent);color:var(--accent)}
+.manager-heading-actions .primary,.manager-top-buttons .primary,.manager-section-top>.primary{display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.manager-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 32px}
+.manager-stats>div{background:var(--white);border:1px solid var(--border);border-radius:8px;min-height:105px;padding:20px 24px}
+.manager-stats span{display:block;color:var(--muted);font:12px/1.5 var(--sans)}
+.manager-stats strong{display:block;margin-top:9px;font:normal 31px/1.1 Georgia,"Songti SC",serif;color:var(--ink)}
+.manager-controls{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:24px 0 32px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.manager-tabs{display:flex;gap:26px}
+.manager-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:14px 6px;color:var(--muted);font:600 13px/1.3 var(--sans)}
+.manager-tabs button.active,.manager-tabs button:hover{color:var(--ink);border-bottom-color:var(--accent)}
+.manager-controls-right{display:flex;align-items:center;gap:10px;padding-bottom:7px}
+.manager-controls-right label{font:12px var(--sans);color:var(--muted)}
+.manager-controls-right select{width:auto;margin:0;padding:9px 31px 9px 11px;background:var(--white);border:1px solid var(--border);border-radius:5px;font:12px var(--sans);color:var(--ink)}
+.manager-controls-right button{padding:9px 12px}
+.manager-section-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.manager-section-top h2,.manager-standalone-head h2{font:normal 30px/1.25 Georgia,"Songti SC",serif;margin:0 0 7px}
+.manager-section-top p{font:13px/1.7 var(--sans);color:var(--muted);margin:0}
+.manager-notice{border:1px solid var(--border);background:var(--sand);color:var(--ink);border-radius:6px;padding:13px 16px;margin-bottom:22px;font:13px/1.7 var(--sans)}
+.manager-notice.error{border-color:#bb594a;color:#bd6252}
+.manager-series-list{display:grid;gap:21px}
+.manager-series-card{background:var(--white);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.manager-series-intro{display:flex;gap:22px;align-items:flex-start;padding:24px 24px 22px}
+.manager-series-cover,.manager-series-placeholder{width:110px;height:140px;flex:0 0 110px;border-radius:5px;object-fit:cover;display:flex;justify-content:center;align-items:center;background:var(--sand);color:var(--accent);font-size:38px}
+.manager-series-copy{flex:1;min-width:0;padding-top:3px}
+.manager-kicker{display:block;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;font:700 10px var(--sans);margin-bottom:10px}
+.manager-series-copy h3{font:normal 27px/1.35 Georgia,"Songti SC",serif;margin:0 0 9px;overflow-wrap:anywhere}
+.manager-series-copy p{font:13px/1.75 var(--sans);color:var(--muted);margin:0 0 11px}
+.manager-hint{font:11px/1.5 var(--sans);color:var(--muted);overflow-wrap:anywhere}
+.manager-series-intro>.manager-actions{justify-content:flex-end;max-width:220px}
+.manager-mini{padding:7px 10px;font-size:11px;min-width:45px}
+.manager-mini.danger{border-color:transparent;background:transparent;color:#bc6555}
+.manager-mini.danger:hover{border-color:#bc6555;background:rgba(188,101,85,.08)}
+.manager-books{border-top:1px solid var(--border);background:var(--paper);padding:12px 24px 19px}
+.manager-book{border:1px solid var(--border);border-radius:6px;background:var(--white);margin:10px 0;overflow:hidden}
+.manager-book>summary,.manager-chapter>summary{list-style:none;display:flex;align-items:center;gap:14px;cursor:pointer;padding:16px 18px}
+.manager-book>summary::-webkit-details-marker,.manager-chapter>summary::-webkit-details-marker{display:none}
+.manager-expand-symbol:before{content:'›';color:var(--accent);font-size:19px;display:inline-block;transform:rotate(0);transition:transform .15s}
+details[open]>summary>.manager-expand-symbol:before{transform:rotate(90deg)}
+.manager-book summary strong,.manager-chapter summary strong{font:600 17px/1.5 Georgia,"Songti SC",serif;color:var(--ink);display:block}
+.manager-book summary small,.manager-chapter summary small{font:11px/1.6 var(--sans);color:var(--muted);display:block;margin-top:3px}
+.manager-nested{border-top:1px solid var(--border);padding:12px 16px 18px}
+.manager-nested-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+.manager-chapter{background:var(--paper);border:1px solid var(--border);border-radius:5px;margin:10px 0}
+.manager-chapter>summary{padding:12px 15px}
+.manager-chapter summary strong{font-size:15px}
+.manager-chapter-contents{padding:12px 15px;border-top:1px solid var(--border);background:var(--white)}
+.manager-section-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 5px;border-top:1px solid var(--line)}
+.manager-section-row>span{min-width:0;flex:1}
+.manager-section-row strong{font:500 14px/1.5 Georgia,"Songti SC",serif;color:var(--ink);display:block;overflow-wrap:anywhere}
+.manager-section-row small{font:11px/1.5 var(--sans);color:var(--muted)}
+.manager-subempty{padding:9px 16px 13px;color:var(--muted);font:12px/1.75 var(--sans);margin:0}
+.manager-standalone{margin-top:30px}
+.manager-standalone-head{display:flex;align-items:center;justify-content:space-between;margin:30px 0 14px}
+.manager-standalone-head h2{font-size:23px}
+.manager-standalone-head span{font:12px var(--sans);color:var(--muted)}
+.manager-standalone>.manager-book{padding:0;margin:10px 0}
+.manager-empty{padding:45px 35px;background:var(--white);border:1px dashed var(--border);border-radius:7px;color:var(--muted);font:14px/1.8 var(--sans)}
+.manager-empty strong{color:var(--ink)}
+.manager-empty p{margin:9px 0 20px}
+.manager-search-line{display:flex;align-items:center;justify-content:space-between;gap:17px;margin:20px 0}
+.manager-search-line input[type="search"]{flex:1;max-width:540px;margin:0;padding:11px 15px;border:1px solid var(--border);background:var(--white);color:var(--ink);border-radius:6px;font:13px var(--sans)}
+.manager-search-line label{display:flex;gap:9px;align-items:center;white-space:nowrap;font:12px var(--sans);color:var(--muted)}
+.manager-search-line input[type="checkbox"]{width:15px;height:15px;margin:0;accent-color:var(--accent)}
+.manager-article-list{display:grid;gap:12px}
+.manager-article-row{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:22px 26px;background:var(--white);border:1px solid var(--border);border-radius:7px}
+.manager-article-main{min-width:0;flex:1}
+.manager-article-meta{display:flex;gap:9px;align-items:center;flex-wrap:wrap;color:var(--muted);font:11px/1.6 var(--sans)}
+.manager-status{color:#397651;font-weight:600}
+.manager-status.is-draft{color:var(--muted)}
+.manager-article-main h3{font:normal 21px/1.5 Georgia,"Songti SC",serif;margin:10px 0 5px;color:var(--ink);overflow-wrap:anywhere}
+.manager-article-main p{font:12px/1.7 var(--sans);color:var(--muted);margin:0 0 6px}
+.manager-article-main>small{font:11px/1.5 var(--sans);color:var(--muted)}
+.manager-article-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.manager-dialog{position:fixed;inset:0;margin:auto;width:min(570px,calc(100vw - 28px));max-height:92dvh;overflow:auto;padding:0;border:1px solid var(--border);border-radius:9px;background:var(--white);color:var(--ink);box-shadow:0 20px 90px rgba(10,20,12,.25)}
+.manager-dialog::backdrop{background:rgba(12,20,14,.52)}
+.manager-dialog header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:22px 26px}
+.manager-dialog header h2{font:normal 24px Georgia,"Songti SC",serif;margin:0}
+.manager-dialog header button{font-size:27px;color:var(--muted);border:0;background:transparent;cursor:pointer}
+#manager-dialog-fields{padding:25px 26px 7px}
+.manager-field{display:block;font:600 12px/1.6 var(--sans);margin-bottom:18px}
+.manager-field>span{display:block;margin-bottom:6px;color:var(--ink)}
+.manager-field input,.manager-field select,.manager-field textarea{display:block;margin:0;width:100%;font:14px/1.5 var(--sans);border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:11px;border-radius:5px;box-sizing:border-box}
+.manager-field textarea{min-height:100px;resize:vertical}
+.manager-field input[readonly]{opacity:.75}
+#manager-dialog-error{color:var(--accent);font:12px/1.7 var(--sans);margin:2px 26px 8px}
+.manager-dialog footer{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);padding:15px 26px 20px}
+html[data-admin-theme="dark"] .manager-page .manager-series-card,
+html[data-admin-theme="dark"] .manager-page .manager-book,
+html[data-admin-theme="dark"] .manager-page .manager-article-row{background:var(--white);border-color:var(--border)}
+html[data-admin-theme="dark"] .manager-page .manager-books,
+html[data-admin-theme="dark"] .manager-page .manager-chapter{background:var(--paper)}
+html[data-admin-theme="dark"] .manager-page .manager-mini.danger{color:#e6a294}
+html[data-admin-theme="dark"] .manager-header-link{color:#c6d8c5}
+@media(max-width:880px){
+ .manager-container{width:calc(100% - 36px);padding-top:30px}
+ .manager-heading{align-items:flex-start;flex-wrap:wrap}
+ .manager-series-intro{flex-wrap:wrap;gap:16px}
+ .manager-series-intro>.manager-actions{width:100%;max-width:none;justify-content:flex-start}
+ .manager-article-row{align-items:flex-start;flex-wrap:wrap}
+ .manager-article-actions{width:100%;justify-content:flex-start}
+ .manager-stats{gap:9px}
+ .manager-stats>div{padding:13px;min-height:86px}
+}
+@media(max-width:520px){
+ .desk-head-inner{gap:10px;padding:12px 16px;flex-wrap:wrap}
+ .desk-head-inner>a:first-child{font-size:17px}
+ .desk-head-inner>span{display:none}
+ .manager-header-link{margin-left:auto}
+ .manager-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .manager-controls{align-items:flex-start}
+ .manager-tabs{gap:8px}
+ .manager-controls-right{width:100%;justify-content:flex-end}
+ .manager-series-intro{padding:16px}
+ .manager-series-cover,.manager-series-placeholder{width:70px;height:95px;flex-basis:70px}
+ .manager-series-copy h3{font-size:23px}
+ .manager-books{padding:9px}
+ .manager-search-line{align-items:stretch;flex-direction:column}
+ .manager-section-row{flex-wrap:wrap}
+ .manager-section-row .manager-actions{width:100%}
+ .manager-dialog header,#manager-dialog-fields,.manager-dialog footer{padding-left:16px;padding-right:16px}
+}
