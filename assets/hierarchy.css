@@ -55,3 +55,6 @@ html[data-admin-theme="dark"] .hier-dialog select{background:#17201a;color:#ebf0
 html[data-admin-theme="dark"] .hier-managed-series{background:#202a23;border-color:var(--border);}
 html[data-admin-theme="dark"] .hier-series-actions button,
 html[data-admin-theme="dark"] #hier-article-series-add{background:#19221b;color:#e2e9e0;border-color:#425249;}
+
+/* Respect the hidden state even when flex styles are defined. */
+.hier-toolbar[hidden],.hier-tree[hidden],#hier-init-series[hidden]{display:none!important;}

@@ -42,7 +42,7 @@ function draw(){
     return;
   }
   $('#hier-create-book').disabled=false;
-  $('#hier-create-series').disabled=!seriesEnabled;
+  $('#hier-create-series').disabled=!enabled;
   $('#hier-init-series').hidden=seriesEnabled;
   const out=[];
   if(!seriesEnabled)out.push('<p class="hier-help">点击上方「启用系列管理」，即可自动创建系列数据表并保留现有系列。你原有的书籍和文章不会改变。</p>');
@@ -105,9 +105,32 @@ form.addEventListener('submit',async e=>{
  try{await handler(data);dialog.close();await reload();}
  catch(err){$('#hier-form-error').textContent=err.message;}
 });
-function seriesEditor(item=null){
+async function ensureSeriesReady(){
+ if(!enabled){
+   alert('请先在 Cloudflare D1 完成书、章、节的数据库升级。');
+   return false;
+ }
+ if(seriesEnabled)return true;
+ if(!confirm('首次使用需要建立系列数据表并导入现有中英文系列。不会删除文章、书籍或草稿。现在启用吗？'))return false;
+ const defaults=['zh','en'].flatMap(lang=>(window.TRN?.collections?.[lang]||[]).map(v=>({...v,language:lang})));
+ const launch=$('#hier-init-series'),create=$('#hier-create-series');
+ launch.disabled=true;create.disabled=true;
+ try{
+   await api({op:'series-init',defaults});
+   await reload();
+   if(!seriesEnabled)throw Error('初始化后仍未找到系列数据表，请刷新页面重试。');
+   return true;
+ }catch(error){
+   alert('系列初始化失败：'+error.message+'。若仍失败，可在 Cloudflare D1 Console 中执行 migrations/2026-11-09-series.sql。');
+   return false;
+ }finally{
+   launch.disabled=false;
+   create.disabled=!enabled;
+ }
+}
+async function seriesEditor(item=null){
  const editing=!!item;
- if(!seriesEnabled){alert('请先在 Cloudflare D1 执行系列升级 SQL。');return;}
+ if(!await ensureSeriesReady())return;
  const lang=chooser('所属站点','language',[['zh','中文站'],['en','英文站']],item?.language||'zh');
  const slug=line('系列标识（小写英文、数字、连字符）','slug',item?.slug||'');
  const slugInput=slug.querySelector('input');
@@ -229,17 +252,7 @@ function updateArticleSeriesOptions(){
     const option=document.createElement('option');option.value=item.slug;option.textContent=item.title+(item.status==='draft'?'（草稿）':'');articleSeriesAdd.append(option);
   }
 }
-$('#hier-init-series').addEventListener('click',async()=>{
- if(!confirm('将为当前网站添加系列数据表，并导入现有中英文系列。此操作不会修改已发表文章和书籍，确定继续吗？'))return;
- const btn=$('#hier-init-series');btn.disabled=true;btn.textContent='正在启用……';
- try{
-   const defaults=['zh','en'].flatMap(lang=>(window.TRN?.collections?.[lang]||[]).map(v=>({...v,language:lang})));
-   await api({op:'series-init',defaults});
-   await reload();
- }catch(error){
-   alert('启用失败：'+error.message+'。也可以在 Cloudflare D1 Console 中执行 GitHub 的系列升级 SQL。');
- }finally{btn.disabled=false;btn.textContent='启用系列管理';}
-});
+$('#hier-init-series').addEventListener('click',ensureSeriesReady);
 $('#hier-create-series').addEventListener('click',()=>seriesEditor());
 $('#hier-create-book').addEventListener('click',()=>bookEditor());
 $('#hier-refresh').addEventListener('click',reload);
