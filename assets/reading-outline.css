@@ -1,0 +1,16 @@
+/* Clickable multilevel table of contents for long-form essays. */
+.reader-toc{border:1px solid var(--line);background:var(--panel);border-radius:5px;margin:36px 0 42px;overflow:hidden}
+.reader-toc summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 22px;color:var(--ink);font:600 14px var(--sans)}
+.reader-toc summary::-webkit-details-marker{display:none}
+.reader-toc summary .reader-toc-subtitle{font:11px var(--sans);color:var(--muted)}
+.reader-toc summary::after{content:'＋';font:17px var(--sans);color:var(--accent);margin-left:auto}
+.reader-toc[open] summary::after{content:'−'}
+.reader-toc .reader-toc-links{padding:4px 20px 20px;max-height:440px;overflow-y:auto;border-top:1px solid var(--line)}
+.reader-toc a{--depth:0;display:block;padding:7px 8px 7px calc(8px + var(--depth) * 17px);font:14px/1.65 var(--sans);color:var(--muted);border-left:2px solid transparent;overflow-wrap:anywhere}
+.reader-toc a:hover,.reader-toc a:focus-visible{color:var(--accent);background:var(--sand);border-color:var(--accent)}
+.article-body h1,.article-body h2,.article-body h3,.article-body h4,.article-body h5,.article-body h6{scroll-margin-top:36px}
+.article-body h4{font-size:1em;font-weight:700}
+.article-body h5{font-size:.95em;font-weight:650}
+.article-body h6{font-size:.9em;font-weight:600;color:var(--muted)}
+.article-body h5,.article-body h6{margin:1.5em 0 .7em;line-height:1.8}
+@media(max-width:650px){.reader-toc{margin:24px 0}.reader-toc .reader-toc-links{padding:6px 12px 15px;max-height:340px}.reader-toc a{padding-left:calc(4px + var(--depth) * 11px);font-size:12px}}
