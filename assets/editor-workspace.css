@@ -22,3 +22,32 @@ html[data-admin-theme="dark"] .desk-head-inner .desk-nav-link{color:#c3d8c4}
  .desk-head-inner>a:first-child{font-size:17px}
  .desk-head-inner .desk-nav-link{font-size:11px}
 }
+
+/* All heading levels use the same local typesetting, regardless of copied
+   inline fonts/strong/span formatting in legacy drafts. */
+#studio-rich-editor .toastui-editor-contents :is(h1,h2,h3,h4,h5,h6),
+.studio-paper .markdown-preview :is(h1,h2,h3,h4,h5,h6){
+  font-family:"Songti SC","Noto Serif CJK SC",Georgia,serif!important;
+  font-weight:600!important;
+  font-style:normal!important;
+  line-height:1.5!important;
+}
+#studio-rich-editor .toastui-editor-contents h1,
+.studio-paper .markdown-preview h1{font-size:1.75em!important}
+#studio-rich-editor .toastui-editor-contents h2,
+.studio-paper .markdown-preview h2{font-size:1.45em!important}
+#studio-rich-editor .toastui-editor-contents h3,
+.studio-paper .markdown-preview h3{font-size:1.25em!important}
+#studio-rich-editor .toastui-editor-contents h4,
+.studio-paper .markdown-preview h4{font-size:1.12em!important}
+#studio-rich-editor .toastui-editor-contents h5,
+.studio-paper .markdown-preview h5{font-size:1.04em!important}
+#studio-rich-editor .toastui-editor-contents h6,
+.studio-paper .markdown-preview h6{font-size:1em!important}
+#studio-rich-editor .toastui-editor-contents :is(h1,h2,h3,h4,h5,h6) *,
+.studio-paper .markdown-preview :is(h1,h2,h3,h4,h5,h6) *{
+  font-family:inherit!important;font-size:inherit!important;
+  font-weight:inherit!important;font-style:inherit!important;
+  color:inherit!important;line-height:inherit!important;
+  letter-spacing:inherit!important;
+}

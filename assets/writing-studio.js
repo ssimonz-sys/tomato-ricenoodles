@@ -98,13 +98,20 @@
   headingTools.innerHTML = '<span>长文结构</span><select id="studio-heading-level" aria-label="选择标题级别"><option value="1">一级标题</option><option value="2">二级标题</option><option value="3">三级标题</option><option value="4">四级标题</option><option value="5">五级标题</option><option value="6">六级标题</option></select><button type="button" id="studio-add-heading">插入标题</button><button type="button" id="studio-add-sample">插入分节示例</button>';
   const hint = document.createElement('p');
   hint.className = 'studio-editor-hint';
-  hint.textContent = '普通段落可左对齐、居中、右对齐，也可增加或减少缩进。列表仍可通过 Tab 缩进；设置标题后会自动生成目录。';
+  hint.textContent = '粘贴内容会自动去除外部格式，只保留文字、换行和空格。普通段落可对齐及缩进；设置标题后自动生成目录。';
   const layoutStatus=document.createElement('p');
   layoutStatus.id='studio-layout-status';
   layoutStatus.className='studio-layout-status';
   layoutStatus.setAttribute('role','status');
   layoutStatus.setAttribute('aria-live','polite');
   bodyTop.before(headingTools,hint,layoutStatus);
+  // Intercept clipboard events before Toast UI processes rich HTML. Keep only
+  // Unicode text, line breaks and spaces; styling comes from this editor.
+  window.TRNPlainTextPaste?.install(richMount,()=>rich,textarea,()=>{
+    syncEditor();
+    queueLiveIndent();
+    scheduleOutline();
+  });
 
   function closeSettings() {
     settings.classList.remove('open');

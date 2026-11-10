@@ -30,3 +30,19 @@ body[data-lang=zh] .topline{background:#4c493a}.zh-header .nav-inner{min-height:
   white-space:break-spaces;
   tab-size:4;
 }
+
+/* All headings follow the site's typesetting even when a previously pasted
+   title contains inline font styling from another website. */
+.article-body :is(h1,h2,h3,h4,h5,h6){font-weight:600!important;line-height:1.5!important}
+.article-body h1{font-size:1.75em!important}
+.article-body h2{font-size:1.45em!important}
+.article-body h3{font-size:1.25em!important}
+.article-body h4{font-size:1.12em!important}
+.article-body h5{font-size:1.04em!important}
+.article-body h6{font-size:1em!important}
+.article-body :is(h1,h2,h3,h4,h5,h6) *{
+  font-family:inherit!important;font-size:inherit!important;
+  font-weight:inherit!important;font-style:inherit!important;
+  line-height:inherit!important;letter-spacing:inherit!important;
+  color:inherit!important
+}
