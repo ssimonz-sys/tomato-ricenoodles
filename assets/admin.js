@@ -44,6 +44,7 @@
     else if(startParams.get('new')==='1'||pendingChapter||!state.editing) {
       edit();
       form.elements.language.value=requestedLanguage;
+      placement?.load(null,{pendingChapter});
       updatePublishControls();
     }
   }
@@ -207,7 +208,7 @@
     if(!canChange())return;
     pendingChapter=null;
     history.replaceState({},'',location.pathname+'?new=1');
-    edit();form.elements.language.value='zh';updatePublishControls();
+    edit();form.elements.language.value='zh';placement?.load(null,{pendingChapter});updatePublishControls();
   });
   form.addEventListener('input',changed);
   form.addEventListener('change',changed);
@@ -274,6 +275,6 @@
     catch(e){message('#editor-message',e.message);}
   });
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
-  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;updatePublishControls();return true;}};
+  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;placement?.load(null,{pendingChapter});updatePublishControls();return true;}};
   check();
 })();
