@@ -1,0 +1,10 @@
+Tomato Ricenoodles / 番茄米线
+Website visual edition V2 | 2026-11-09
+
+EN: bold, geometric constructivism
+ZH: soft, elaborately detailed book-and-ink design
+Two independent editorial sites, one author desk, one NEW database.
+
+See README.md and docs/部署指南-中文.md.
+
+Editor update: single /admin/ writing desk with explicit publish destination and publish-state controls; confirmed cross-site moves.
