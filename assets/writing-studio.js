@@ -65,6 +65,14 @@
   const actions = document.createElement('div');
   actions.className = 'studio-top-actions';
   actions.innerHTML = '<button type="button" class="studio-small-button" id="studio-focus">专注写作</button><button type="button" class="studio-small-button" id="studio-settings-open">作品设置</button>';
+  const focusFormatting = document.createElement('button');
+  focusFormatting.type = 'button';
+  focusFormatting.className = 'studio-small-button';
+  focusFormatting.id = 'studio-focus-format';
+  focusFormatting.textContent = '显示排版工具';
+  focusFormatting.setAttribute('aria-pressed', 'false');
+  focusFormatting.hidden = true;
+  actions.insertBefore(focusFormatting, actions.querySelector('#studio-settings-open'));
   const oldButtons = form.querySelector('.editor-buttons');
   if (oldButtons) actions.append(oldButtons);
   const bottom = form.querySelector('.editor-bottom');
@@ -96,10 +104,33 @@
   $('#studio-settings-close').addEventListener('click', closeSettings);
   backdrop.addEventListener('click', closeSettings);
   document.addEventListener('keydown', event => { if(event.key === 'Escape') closeSettings(); });
-  $('#studio-focus').addEventListener('click', () => {
-    focused = !focused;
-    document.body.classList.toggle('studio-focus-mode', focused);
-    $('#studio-focus').textContent = focused ? '退出专注' : '专注写作';
+  function setFocusMode(next) {
+    focused = next;
+    document.body.classList.toggle('studio-focus-mode', next);
+    document.body.classList.remove('studio-focus-tools-visible');
+    $('#studio-focus').textContent = next ? '退出专注' : '专注写作';
+    $('#studio-focus').setAttribute('aria-pressed', String(next));
+    focusFormatting.hidden = !next;
+    focusFormatting.textContent = '显示排版工具';
+    focusFormatting.setAttribute('aria-pressed', 'false');
+    if (next) {
+      // The rich editor is kept mounted, so content, selection and undo history survive.
+      requestAnimationFrame(() => {
+        const target = richMount.querySelector('.toastui-editor-ww-container [contenteditable="true"]')
+          || richMount.querySelector('.toastui-editor-md-container .CodeMirror textarea')
+          || (!rich ? textarea : null);
+        target?.focus({preventScroll:true});
+      });
+    }
+  }
+  $('#studio-focus').addEventListener('click', () => setFocusMode(!focused));
+  focusFormatting.addEventListener('click', () => {
+    const visible = document.body.classList.toggle('studio-focus-tools-visible');
+    focusFormatting.textContent = visible ? '收起排版工具' : '显示排版工具';
+    focusFormatting.setAttribute('aria-pressed', String(visible));
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && focused && !settings.classList.contains('open')) setFocusMode(false);
   });
 
   function getMarkdown() { return rich ? rich.getMarkdown() : textarea.value; }
