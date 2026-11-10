@@ -4,7 +4,8 @@ export async function onRequestGet({request,env}){
   const u=new URL(request.url);const lang=u.searchParams.get('lang')||'en';
   if(!['en','zh'].includes(lang))return error('Invalid language.');
   const enabled=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_section_links'").first();
-  const base="SELECT id,language,type,slug,title,excerpt,cover_url,tags,collection_slugs,word_count,created_at,updated_at,published_at FROM posts WHERE language=? AND status='published'";
+  const hasStats=!!await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_engagement_stats'").first();
+  const base="SELECT posts.id,language,type,slug,title,excerpt,cover_url,tags,collection_slugs,word_count,created_at,updated_at,published_at"+(hasStats?", COALESCE(s.views,0) AS views, COALESCE(s.likes,0) AS likes":"") +" FROM posts "+(hasStats?" LEFT JOIN trn_engagement_stats s ON s.post_id=posts.id":"")+" WHERE language=? AND status='published'";
   const seriesEnabled=enabled&&!!await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_series'").first();
   const seriesGuard=seriesEnabled?" OR (b.series_slug<>'' AND NOT EXISTS (SELECT 1 FROM trn_series t WHERE t.language=b.language AND t.slug=b.series_slug AND t.status='published'))":"";
   const access=enabled?" AND NOT EXISTS (SELECT 1 FROM trn_section_links l JOIN trn_chapters c ON c.id=l.chapter_id JOIN trn_books b ON b.id=c.book_id WHERE l.post_id=posts.id AND (c.status<>'published' OR b.status<>'published' OR b.language<>posts.language"+seriesGuard+"))":"";

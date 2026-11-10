@@ -2,7 +2,10 @@ import {guard} from '../../../lib/auth.js';
 import {error,normalizePost,parseJson,send,validatePost} from '../../../lib/common.js';
 export async function onRequestGet(context){
   const a=await guard(context);if(a.failed)return a.failed;
-  const {results}=await context.env.DB.prepare('SELECT * FROM posts ORDER BY updated_at DESC LIMIT 300').all();
+  const db=context.env.DB;
+  const hasStats=!!await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_engagement_stats'").first();
+  const sql=hasStats?"SELECT posts.*,COALESCE(e.views,0) AS views,COALESCE(e.likes,0) AS likes FROM posts LEFT JOIN trn_engagement_stats e ON e.post_id=posts.id ORDER BY posts.updated_at DESC LIMIT 300":"SELECT * FROM posts ORDER BY updated_at DESC LIMIT 300";
+  const {results}=await db.prepare(sql).all();
   return send({posts:(results||[]).map(r=>normalizePost(r,true))});
 }
 export async function onRequestPost(context){
