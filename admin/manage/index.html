@@ -1,97 +1,46 @@
 <!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" href="/assets/graphics/favicon.svg" type="image/svg+xml">
-<title>作品管理 | 番茄米线</title>
+<link rel="icon" type="image/svg+xml" href="/assets/graphics/favicon.svg">
+<title>作品管理 | Tomato Ricenoodles</title>
 <link rel="stylesheet" href="/assets/site.css">
-<link rel="stylesheet" href="/assets/admin.css">
-<link rel="stylesheet" href="/assets/admin-theme.css">
-<link rel="stylesheet" href="/assets/manager.css"><link rel="stylesheet" href="/assets/cover-upload.css">
-<script src="/assets/admin-theme.js"></script>
-<script src="/site-config.js" defer></script>
-<script src="/assets/cover-upload.js" defer></script><script src="/assets/manager.js" defer></script>
-</head>
-<body class="admin-desk manager-page">
-<header class="desk-header"><div class="desk-head-inner">
-<a href="/zh/">✳ 番茄米线</a><span>作品管理</span>
-<a href="/admin/" class="manager-header-link">写作编辑</a>
-<button id="admin-theme-toggle" type="button" aria-pressed="false" aria-label="切换后台明暗模式">☾ 夜间模式</button>
-<button id="logout" hidden>退出登录</button>
-</div></header>
-<main class="manager-container">
-<section id="manager-login" class="login-box" hidden>
-<p class="eyebrow">作者专属区域</p><h1>登录作品管理</h1>
-<p>管理系列、书籍、章节、小节与独立文章。</p>
-<form id="manager-login-form"><label>管理员密码
-<input id="manager-password" type="password" required autocomplete="current-password"></label>
-<button type="submit" class="primary">登录后台</button></form>
-<p id="manager-login-error" role="status" class="desk-message"></p>
-</section>
-<section id="manager-workspace" hidden>
-<div class="manager-heading">
-<div><p class="eyebrow">TOMATO RICENOODLES · LIBRARY</p>
-<h1>作品管理<span class="period">.</span></h1>
-<p>在这里整理系列与书籍。点击书籍进入详情页查看章节；文章的系列、书籍和章节归属可在写作页面直接选择。</p>
-</div>
-<div class="manager-heading-actions"><a class="manager-outline-button" href="/admin/">进入写作编辑</a><a class="primary" href="/admin/?new=1&lang=zh">＋ 新建文章</a></div>
-</div>
-<div class="manager-stats" aria-label="作品统计">
-<div><span>系列</span><strong id="manager-stat-series">0</strong></div>
-<div><span>书籍</span><strong id="manager-stat-books">0</strong></div>
-<div><span>章节</span><strong id="manager-stat-chapters">0</strong></div>
-<div><span>文章 / 节</span><strong id="manager-stat-posts">0</strong></div>
-</div>
-<div class="manager-controls">
-<div class="manager-tabs" role="tablist" aria-label="管理范围">
-<button id="manager-tab-structure" type="button" role="tab" aria-selected="true" class="active">系列与书籍</button>
-<button id="manager-tab-articles" type="button" role="tab" aria-selected="false">文章与草稿</button>
-<button id="manager-tab-comments" type="button" role="tab" aria-selected="false">评论审核 <span id="manager-pending-count"></span></button>
-</div>
-<div class="manager-controls-right">
-<label for="manager-language">语言站点</label>
-<select id="manager-language" aria-label="筛选语言站点">
-<option value="zh">中文站</option><option value="en">英文站</option>
-</select>
-<button type="button" id="manager-reload" class="manager-outline-button">刷新</button>
-</div>
-</div>
-<div id="manager-notice" class="manager-notice" role="status" hidden></div>
-<section id="manager-structure" aria-label="系列和书籍">
-<div class="manager-section-top"><div><h2>系列书架</h2><p>系列中展示书籍卡片，点击进入书籍详情后管理章节</p></div>
-<div class="manager-top-buttons"><button type="button" id="manager-add-series" class="manager-outline-button">＋ 新建系列</button><button type="button" id="manager-add-book" class="primary">＋ 新建书籍</button></div></div>
-<div id="manager-series-list" class="manager-series-list"></div>
-<div id="manager-standalone" class="manager-standalone"></div>
-</section>
-<section id="manager-articles" aria-label="文章列表" hidden>
-<div class="manager-section-top"><div><h2>文章列表</h2><p>独立随笔、诗歌、小说及已经编入章节的小节</p></div><a id="manager-add-article" href="/admin/?new=1&lang=zh" class="primary">＋ 写新文章</a></div>
-<div class="manager-article-filters"><div class="manager-category-tabs" id="manager-category-tabs" aria-label="文章分类">
-<button type="button" class="active" data-category="all">全部</button>
-<button type="button" data-category="essay">政论与随笔</button>
-<button type="button" data-category="fiction">小说</button>
-<button type="button" data-category="poetry">诗歌</button>
-<button type="button" data-category="note">笔记与杂记</button>
-</div><div class="manager-publication-tabs" id="manager-publication-tabs" aria-label="发布状态">
-<button type="button" class="active" data-status="all">全部作品</button><button type="button" data-status="draft">草稿</button><button type="button" data-status="published">已发布</button>
-</div></div>
-<div class="manager-search-line"><input id="manager-search" type="search" placeholder="搜索标题、网址标识或标签" aria-label="搜索文章"><label><input id="manager-only-unlinked" type="checkbox">仅查看独立文章</label></div>
-<div id="manager-article-list" class="manager-article-list"></div>
-</section>
-<section id="manager-comments" aria-label="匿名评论审核" hidden>
-<div class="manager-section-top"><div><h2>匿名评论</h2><p>所有评论须经批准才会公开，读者不需要登录或提供昵称。</p></div>
-<button id="manager-init-engagement" type="button" class="primary" hidden>启用阅读量、点赞与评论</button>
-</div>
-<div class="manager-publication-tabs" id="manager-comment-tabs"><button type="button" data-comment-status="pending" class="active">待审核</button><button type="button" data-comment-status="approved">已公开</button><button type="button" data-comment-status="rejected">已拒绝</button><button type="button" data-comment-status="all">全部</button></div>
-<div id="manager-comments-list" class="manager-comments-list"></div>
-</section>
-</section>
-</main>
-<dialog id="manager-dialog" class="manager-dialog"><form id="manager-dialog-form">
-<header><h2 id="manager-dialog-title"></h2><button type="button" id="manager-dialog-close" aria-label="关闭弹窗">×</button></header>
-<div id="manager-dialog-fields"></div>
-<p id="manager-dialog-error" role="status"></p>
-<footer><button id="manager-dialog-cancel" type="button" class="manager-outline-button">取消</button><button id="manager-dialog-save" type="submit" class="primary">保存</button></footer>
-</form></dialog>
-</body></html>
+<link rel="stylesheet" href="/assets/admin-edition-home.css">
+<script>
+(function(){
+  const p=new URLSearchParams(location.search);
+  const lang=p.get('lang');
+  const hasLegacy=p.has('id')||p.has('chapter')||p.has('book');
+  if((lang==='zh'||lang==='en')&&!hasLegacy){
+    p.delete('lang');
+    location.replace('/admin/'+lang+'/manage/'+(p.toString()?'?'+p:''));
+  }else if(hasLegacy){
+    if((lang==='zh'||lang==='en')){
+      p.delete('lang');
+      location.replace('/admin/'+lang+'/manage/'+(p.toString()?'?'+p:''));
+    }else{
+      location.replace('/admin/legacy/manage/'+location.search);
+    }
+  }else if(p.has('new')){
+    location.replace('/admin/zh/'+location.search);
+  }
+})();
+</script>
+</head><body class="edition-home">
+<main class="edition-home-inner">
+<p class="eyebrow">TOMATO RICENOODLES · AUTHOR WORKSPACE</p>
+<h1 class="edition-home-title">选择作品管理后台</h1>
+<p class="edition-home-description">中文作品与英文作品分开管理。管理员密码、数据库、封面存储和现有文章保持不变。</p>
+<div class="edition-home-grid">
+<a class="edition-home-card" href="/admin/zh/manage/">
+<span class="mode">中文站 · CHINESE</span><strong>番茄米线</strong>
+<small>管理中文系列、书籍、章节、文章与评论</small>
+<span class="edition-home-options"><span>进入中文书架 →</span></span>
+</a>
+<a class="edition-home-card" href="/admin/en/manage/">
+<span class="mode">ENGLISH EDITION</span><strong>Tomato Ricenoodles</strong>
+<small>Manage English collections, books, chapters, posts, and comments.</small>
+<span class="edition-home-options"><span>Open English Library →</span></span>
+</a></div>
+<p class="edition-home-foot"><a href="/admin/">前往写作后台</a>　·　<a href="/zh/">中文首页</a>　·　<a href="/en/">English home</a></p>
+</main></body></html>

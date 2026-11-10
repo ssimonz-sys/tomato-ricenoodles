@@ -1,1 +1,46 @@
-<!doctype html><html lang="zh-CN"><head><link rel="icon" href="/assets/graphics/favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>写作后台 | 番茄米线</title><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/admin.css"><link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css"><link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/theme/toastui-editor-dark.css"><link rel="stylesheet" href="/assets/studio.css"><link rel="stylesheet" href="/assets/admin-theme.css"><link rel="stylesheet" href="/assets/focus-writing.css"><link rel="stylesheet" href="/assets/editor-workspace.css"><link rel="stylesheet" href="/assets/cover-upload.css"><script src="/assets/admin-theme.js"></script><script src="/assets/admin-login-rescue.js" defer></script><script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" defer></script><script src="https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js" defer></script><script src="https://uicdn.toast.com/editor/3.2.2/i18n/zh-cn.min.js" defer></script><script src="/site-config.js" defer></script><script src="/assets/paragraph-layout.js" defer></script><script src="/assets/reading-layout.js" defer></script><script src="/assets/preview-indent.js" defer></script><script src="/assets/plaintext-paste.js" defer></script><script src="/assets/writing-studio.js" defer></script><script src="/assets/editor-placement.js" defer></script><script src="/assets/cover-upload.js" defer></script><script src="/assets/admin.js?v=20261110-login-fix" defer></script></head><body class="admin-desk"><header class="desk-header"><div class="desk-head-inner"><a href="/en/">✳ Tomato Ricenoodles</a><span>写作编辑</span><a class="desk-nav-link" href="/admin/manage/">作品管理</a><button id="admin-theme-toggle" type="button" aria-pressed="false" aria-label="切换后台明暗模式" title="切换明暗模式">☾ 夜间模式</button><button id="logout" hidden>退出登录</button></div></header><main class="desk-container"><section id="login-view" class="login-box"><p class="eyebrow">作者专属区域</p><h1>欢迎来到写作后台</h1><p>登录后即可撰写文章、保存草稿，并选择发布至中文站或英文站。</p><form id="login-form"><label>管理员密码<input type="password" id="password" autocomplete="current-password" required autofocus></label><button class="primary" type="submit">登录后台 →</button></form><div id="login-message" class="desk-message" role="status"></div></section><section id="desk-view" hidden><div class="desk-title"><div><p class="eyebrow">创作空间</p><h1>写作编辑<span class="period">.</span></h1></div><div class="desk-actions"><a class="return-link" href="/admin/manage/">管理系列、书籍与文章 ↗</a><button class="primary" id="new-post">＋ 新建文章</button></div></div><div class="desk-grid"><section class="edit-panel"><div id="editor-empty" class="edit-empty">点击右上角「新建文章」，或从「作品管理」选择已有文章继续编辑。</div><form id="editor" hidden><div class="form-top"><span class="eyebrow" id="edit-label">新建文章</span><span id="save-status"></span></div><label>文章分类<select name="type"><option value="essay">政论与随笔</option><option value="fiction">小说</option><option value="poetry">诗歌</option><option value="note">笔记与杂记</option></select></label><label>文章标题<input name="title" placeholder="请输入文章标题" maxlength="220" required></label><label>文章网址标识 <small>（使用小写英文字母、数字和连字符）</small><input name="slug" placeholder="a-little-story" maxlength="110" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label><label>文章简介<input name="excerpt" placeholder="在文章列表中显示的一两句话" maxlength="1000"></label><label>封面图片 <small>（支持直接上传或粘贴网址）</small><input name="cover_url" type="text" placeholder="/assets/graphics/en-on-ethics.svg" maxlength="1000"></label><div class="form-pair"><label>标签 <small>（用英文逗号分隔）</small><input name="tags" placeholder="写作, 记忆, 文化"></label><label>所属专题 <small>（填写专题标识，用英文逗号分隔）</small><input name="collection_slugs" placeholder="on-ethics, basic-human-science"></label></div><div class="body-top"><label for="content-body">文章正文 <small>（支持 Markdown 排版）</small></label><button id="preview-toggle" type="button" class="secondary">预览</button></div><textarea name="body" id="content-body" spellcheck="true" placeholder="从这里开始写作…" rows="21"></textarea><div id="markdown-preview" class="article-body markdown-preview" hidden></div><div class="editor-bottom"><div class="publishing-controls"><label class="publish-state">发布目标站点<select name="language" id="publish-destination" aria-label="选择中文站或英文站"><option value="en">英文站</option><option value="zh">中文站</option></select></label><label class="publish-state">发布状态<select name="status"><option value="draft">私密草稿（仅自己可见）</option><option value="published">公开发布（读者可见）</option></select></label></div><div class="editor-buttons"><button class="danger" type="button" id="delete-post" hidden>删除文章</button><button class="primary" type="submit" id="save-post">保存文章</button></div></div><div class="publish-feedback" aria-live="polite"><p id="publish-target-note"></p><a id="editor-public-link" class="return-link" hidden target="_blank" rel="noopener">查看已发布文章 ↗</a></div><p class="pair-help">选择发布站点、公开状态和作品归属后，再点击保存或发布。选择书籍后，默认把这篇文章作为新的章节加入；也可以手动选择现有章节。单篇和多章书使用同一管理方式。发布成功后可直接点击文章链接查看。</p><div class="desk-message" id="editor-message" role="status"></div></form></section></div></section></main></body></html>
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/svg+xml" href="/assets/graphics/favicon.svg">
+<title>写作后台 | Tomato Ricenoodles</title>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/admin-edition-home.css">
+<script>
+(function(){
+  const p=new URLSearchParams(location.search);
+  const lang=p.get('lang');
+  const hasLegacy=p.has('id')||p.has('chapter')||p.has('book');
+  if((lang==='zh'||lang==='en')&&!hasLegacy){
+    p.delete('lang');
+    location.replace('/admin/'+lang+'/'+(p.toString()?'?'+p:''));
+  }else if(hasLegacy){
+    if((lang==='zh'||lang==='en')){
+      p.delete('lang');
+      location.replace('/admin/'+lang+'/'+(p.toString()?'?'+p:''));
+    }else{
+      location.replace('/admin/legacy/'+location.search);
+    }
+  }else if(p.has('new')){
+    location.replace('/admin/zh/'+location.search);
+  }
+})();
+</script>
+</head><body class="edition-home">
+<main class="edition-home-inner">
+<p class="eyebrow">TOMATO RICENOODLES · AUTHOR WORKSPACE</p>
+<h1 class="edition-home-title">选择写作后台</h1>
+<p class="edition-home-description">中文作品与英文作品分开管理。管理员密码、数据库、封面存储和现有文章保持不变。</p>
+<div class="edition-home-grid">
+<a class="edition-home-card" href="/admin/zh/">
+<span class="mode">中文站 · CHINESE</span><strong>番茄米线</strong>
+<small>撰写中文作品，保存草稿，发布到中文站</small>
+<span class="edition-home-options"><span>进入中文写作 →</span></span>
+</a>
+<a class="edition-home-card" href="/admin/en/">
+<span class="mode">ENGLISH EDITION</span><strong>Tomato Ricenoodles</strong>
+<small>Write, save drafts, and publish to the English edition.</small>
+<span class="edition-home-options"><span>Open English Studio →</span></span>
+</a></div>
+<p class="edition-home-foot"><a href="/admin/manage/">前往作品管理</a>　·　<a href="/zh/">中文首页</a>　·　<a href="/en/">English home</a></p>
+</main></body></html>
