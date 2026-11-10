@@ -38,6 +38,20 @@ export async function onRequestPost(context){
   const now=new Date().toISOString();
   try{
     switch(data.op){
+      case 'series-init':{
+        const already=await seriesEnabled(db);
+        if(already)return send({ok:true,already:true});
+        const defaults=Array.isArray(data.defaults)?data.defaults:[];
+        if(defaults.length>30)return error('系列数量过多。',400);
+        const seeds=defaults.map((item,i)=>({language:lang(item.language),...seriesData({...item,status:'published',sort_order:i*10})}));
+        await db.prepare("CREATE TABLE IF NOT EXISTS trn_series (language TEXT NOT NULL CHECK (language IN ('en','zh')), slug TEXT NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', art TEXT NOT NULL DEFAULT '', theme TEXT NOT NULL DEFAULT 'sage', category TEXT NOT NULL DEFAULT 'essay' CHECK (category IN ('essay','fiction','poetry','note')), status TEXT NOT NULL DEFAULT 'published' CHECK (status IN ('draft','published')), sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '', PRIMARY KEY(language,slug))").run();
+        await db.prepare('CREATE INDEX IF NOT EXISTS idx_trn_series_list ON trn_series(language,status,sort_order,title)').run();
+        const insert=db.prepare('INSERT OR IGNORE INTO trn_series(language,slug,title,description,art,theme,category,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+        for(const p of seeds){
+          await insert.bind(p.language,p.slug,p.title,p.description,p.art,p.theme,p.category,p.status,p.sort_order,now,now).run();
+        }
+        return send({ok:true,seeded:seeds.length});
+      }
       case 'series-create':{
         if(!await seriesEnabled(db))return error('请先执行系列数据库升级脚本。',409);
         const p=seriesData(data),language=lang(data.language);
