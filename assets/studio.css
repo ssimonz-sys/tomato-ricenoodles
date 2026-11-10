@@ -124,3 +124,10 @@ html[data-admin-theme="dark"] #studio-rich-editor .studio-paragraph-tool:hover{b
   white-space:break-spaces;
   tab-size:4;
 }
+
+/* Toast UI's built-in vertical Markdown preview receives source-aware padding
+   via preview-indent.js. Keep paragraph content aligned in both dark/light. */
+#studio-rich-editor .toastui-editor-md-preview p[data-trn-preview-indent="1"]{
+  box-sizing:border-box;
+  max-width:100%;
+}

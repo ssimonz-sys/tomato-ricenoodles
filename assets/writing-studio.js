@@ -11,6 +11,20 @@
   let readingPreview = false;
   let outlineTimer = null;
   let focused = false;
+  let liveIndentObserver = null;
+  let liveIndentFrame = 0;
+  function updateLiveIndent(){
+    if(!rich || !rich.isMarkdownMode())return;
+    const preview=richMount.querySelector('.toastui-editor-md-preview');
+    if(preview)window.TRNLiveIndent?.apply(preview,rich.getMarkdown());
+  }
+  function queueLiveIndent(){
+    if(liveIndentFrame)return;
+    liveIndentFrame=requestAnimationFrame(()=>{
+      liveIndentFrame=0;
+      updateLiveIndent();
+    });
+  }
   const htmlEscape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   // Move metadata into a drawer while keeping every field inside the existing form.
@@ -162,6 +176,7 @@
       textarea.dispatchEvent(new Event('input', {bubbles: true}));
     }
     scheduleOutline();
+    queueLiveIndent();
   }
   function createLayoutTool(name,label,glyph,command){
     const control=document.createElement('button');
@@ -260,7 +275,15 @@
         },
         hooks: {addImageBlobHook: () => { alert('请先上传图片并通过图片网址插入，目前不支持直接粘贴图片文件。'); return false; }}
       });
-      rich.on('change', syncEditor);
+      rich.on('change',()=>{
+        syncEditor();
+        queueLiveIndent();
+      });
+      // Toast UI regenerates its preview nodes after parsing. Watch only
+      // child/text updates, so setting paragraph padding cannot loop.
+      liveIndentObserver=new MutationObserver(()=>queueLiveIndent());
+      liveIndentObserver.observe(richMount,{subtree:true,childList:true,characterData:true});
+      queueLiveIndent();
       textarea.classList.add('studio-source-hidden');
       richMount.classList.add('is-ready');
       window.TRNAdminTheme?.applyEditor();
@@ -359,7 +382,7 @@
       if (!rich) textarea.hidden = false;
       $('#preview-toggle').textContent = '阅读全文预览';
     }
-    queueMicrotask(() => {loading=false;refreshOutline();});
+    queueMicrotask(() => {loading=false;refreshOutline();queueLiveIndent();});
   }
   function insertMarkdown(text) {
     if (rich) {
