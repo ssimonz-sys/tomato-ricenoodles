@@ -33,3 +33,25 @@ html[data-admin-theme="dark"] .hier-dialog{background:#202a23;color:#ebf0e8}
 html[data-admin-theme="dark"] .hier-dialog input,
 html[data-admin-theme="dark"] .hier-dialog textarea,
 html[data-admin-theme="dark"] .hier-dialog select{background:#17201a;color:#ebf0e8;border-color:#425249}
+
+
+/* Series management inside the book tree. */
+.hier-toolbar{flex-wrap:wrap;align-items:center;}
+.hier-toolbar button{flex:1 1 auto;white-space:nowrap;}
+.hier-toolbar button:disabled{opacity:.45;cursor:not-allowed;}
+.hier-managed-series{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  border:1px solid var(--border);border-radius:6px;margin:13px 0 7px;
+  padding:10px 8px;background:var(--paper);min-width:0;
+}
+.hier-series-info{min-width:0;flex:1}
+.hier-series-info strong{display:block;font:600 13px/1.5 "Songti SC",Georgia,serif;color:var(--ink);overflow-wrap:anywhere;}
+.hier-series-info small{display:block;margin-top:4px;color:var(--muted);font:10px/1.5 var(--sans);overflow-wrap:anywhere;}
+.hier-series-actions{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:105px;flex-shrink:0}
+.hier-series-actions button{padding:3px 5px;background:var(--white);border:1px solid var(--border);border-radius:4px;color:var(--ink);font:10px var(--sans);}
+.hier-series-actions button:hover{border-color:var(--accent);color:var(--accent);}
+#hier-article-series-add{width:100%;margin-top:8px;padding:9px 10px;font:12px var(--sans);border:1px solid var(--border);border-radius:5px;background:var(--white);color:var(--ink);}
+.hier-series-caption{display:block;margin-top:5px;line-height:1.6;color:var(--muted);font-weight:400;}
+html[data-admin-theme="dark"] .hier-managed-series{background:#202a23;border-color:var(--border);}
+html[data-admin-theme="dark"] .hier-series-actions button,
+html[data-admin-theme="dark"] #hier-article-series-add{background:#19221b;color:#e2e9e0;border-color:#425249;}
