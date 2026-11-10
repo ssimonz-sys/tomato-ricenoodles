@@ -25,7 +25,7 @@ export async function onRequestGet(context){
   const [books,chapters,links]=await Promise.all([
     db.prepare('SELECT * FROM trn_books ORDER BY language,series_slug,sort_order,title').all(),
     db.prepare('SELECT * FROM trn_chapters ORDER BY book_id,created_at,id').all(),
-    db.prepare('SELECT * FROM trn_section_links ORDER BY chapter_id,sort_order').all()
+    db.prepare('SELECT * FROM trn_section_links ORDER BY chapter_id,created_at,post_id').all()
   ]);
   const series=hasSeries?(await db.prepare("SELECT t.*, MAX(COALESCE((SELECT MAX(p.updated_at) FROM posts p WHERE p.language=t.language AND p.status='published' AND EXISTS (SELECT 1 FROM json_each(p.collection_slugs) j WHERE j.value=t.slug)),''),COALESCE((SELECT MAX(p.updated_at) FROM posts p JOIN trn_section_links l ON l.post_id=p.id JOIN trn_chapters ch ON ch.id=l.chapter_id JOIN trn_books b ON b.id=ch.book_id WHERE b.language=t.language AND b.series_slug=t.slug AND p.status='published'),''),t.created_at) AS last_activity FROM trn_series t ORDER BY t.language,last_activity DESC,t.created_at DESC,t.slug").all()).results||[]:[];
   return send({enabled:true,seriesEnabled:hasSeries,series,books:books.results||[],chapters:chapters.results||[],links:links.results||[]});
@@ -158,7 +158,7 @@ export async function onRequestPost(context){
         const chapter=await db.prepare('SELECT ch.id,b.language FROM trn_chapters ch JOIN trn_books b ON b.id=ch.book_id WHERE ch.id=?').bind(chapterId).first();
         if(!post||!chapter)return error('文章或章节不存在。',404);
         if(post.language!==chapter.language)return error('中文站和英文站的内容不能混用。',409);
-        await db.prepare('INSERT INTO trn_section_links(post_id,chapter_id,sort_order,created_at) VALUES(?,?,?,?) ON CONFLICT(post_id) DO UPDATE SET chapter_id=excluded.chapter_id,sort_order=excluded.sort_order')
+        await db.prepare('INSERT INTO trn_section_links(post_id,chapter_id,sort_order,created_at) VALUES(?,?,?,?) ON CONFLICT(post_id) DO UPDATE SET chapter_id=excluded.chapter_id,created_at=CASE WHEN trn_section_links.chapter_id<>excluded.chapter_id THEN excluded.created_at ELSE trn_section_links.created_at END')
           .bind(postId,chapterId,order(data.sort_order),now).run();
         return send({ok:true});
       }

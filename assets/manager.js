@@ -161,7 +161,8 @@ function renderBookDetails(book){
     '</div></section>';
 }
 function renderChapter(chapter){
-  const links=state.links.filter(l=>l.chapter_id===chapter.id).sort(rank);
+  const links=state.links.filter(l=>l.chapter_id===chapter.id).sort((a,b)=>
+    String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.post_id).localeCompare(String(b.post_id)));
   return '<details class="manager-chapter" open><summary><span class="manager-expand-symbol" aria-hidden="true"></span><span><strong>章 · '+esc(chapter.title)+'</strong><small>'+links.length+' 节 · '+(chapter.status==='published'?'公开':'草稿')+'</small></span></summary><div class="manager-chapter-contents">'+
   '<div class="manager-nested-actions">'+button('section-new',chapter.id,'＋ 写新节')+button('section-link',chapter.id,'关联文章')+button('chapter-edit',chapter.id,'编辑章')+button('chapter-delete',chapter.id,'删除章','danger')+'</div>'+
   (links.length?links.map(link=>{
@@ -300,8 +301,7 @@ function linkEditor(chapter=null,post=null){
  const old=post&&sectionLink(post.id);
  present(post?'调整文章所属章节':'将文章关联到章节',[
   field({name:'post_id',label:'选择文章',options:candidates,value:post?.id??candidates[0][0]}),
-  field({name:'chapter_id',label:'目标章节',options:possible,value:chapter?.id??old?.chapter_id??possible[0][0]}),
-  field({name:'sort_order',label:'节的排序',type:'number',value:old?.sort_order??0})
+  field({name:'chapter_id',label:'目标章节',options:possible,value:chapter?.id??old?.chapter_id??possible[0][0]})
  ],data=>api(payload('section-link',data)));
 }
 async function remove(op,data,question){

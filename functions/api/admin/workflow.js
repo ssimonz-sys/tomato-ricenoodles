@@ -102,7 +102,7 @@ export async function onRequestPost(context){
   if(hasHierarchy){
     if(mode==='book'){
       const targetChapter=chapter?.id||newChapterId;
-      steps.push(db.prepare('INSERT INTO trn_section_links(post_id,chapter_id,sort_order,created_at) VALUES(?,?,?,?) ON CONFLICT(post_id) DO UPDATE SET chapter_id=excluded.chapter_id')
+      steps.push(db.prepare('INSERT INTO trn_section_links(post_id,chapter_id,sort_order,created_at) VALUES(?,?,?,?) ON CONFLICT(post_id) DO UPDATE SET chapter_id=excluded.chapter_id,created_at=CASE WHEN trn_section_links.chapter_id<>excluded.chapter_id THEN excluded.created_at ELSE trn_section_links.created_at END')
         .bind(id,targetChapter,0,now));
     }else{
       steps.push(db.prepare('DELETE FROM trn_section_links WHERE post_id=?').bind(id));

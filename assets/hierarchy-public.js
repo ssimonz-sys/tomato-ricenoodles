@@ -14,7 +14,7 @@ const seriesUrl=slug=>route('collections.html?slug='+encodeURIComponent(slug));
 let content=null;
 const bookBy=id=>content.books.find(b=>b.id===id);
 const chapterBy=id=>content.chapters.find(c=>c.id===id);
-const sectionFor=id=>content.sections.filter(s=>s.chapter_id===id).sort((a,b)=>a.sort_order-b.sort_order);
+const sectionFor=id=>content.sections.filter(s=>s.chapter_id===id).sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.post_id).localeCompare(String(b.post_id)));
 const seriesFor=slug=>(content?.series||window.TRN?.collections?.[lang]||[]).find(c=>c.slug===slug);
 function title(t,defaultText){d.title=(t||defaultText)+' | '+(zh?'番茄米线':'Tomato Ricenoodles');}
 function breadcrumb(links){
