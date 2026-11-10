@@ -54,7 +54,7 @@ async function refresh(){
   }catch(e){note('读取作品失败：'+e.message,true);}
 }
 function coverURL(value){
-  if(/^https:\/\/[^\s<>"']+$/i.test(value||'')||/^\/assets\/(?:covers|graphics)\/[a-z0-9_./-]+\.(?:svg|png|jpe?g|webp)$/i.test(value||''))return value;
+  if(/^https:\/\/[^\s<>"']+$/i.test(value||'')||/^\/assets\/(?:covers|graphics)\/[a-z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)$/i.test(value||'')||/^\/media\/covers\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif)$/i.test(value||''))return value;
   return '';
 }
 function selectedSeries(){
@@ -203,6 +203,9 @@ function present(title,items,handler){
  fields.replaceChildren(...items);
  saveHandler=handler;
  dialog.showModal();
+ for(const input of fields.querySelectorAll('input[name="art"], input[name="cover_url"]')){
+  window.TRNCoverUpload?.attach(input,{getCsrf:()=>state.csrf});
+ }
  fields.querySelector('input:not([readonly]),select,textarea')?.focus();
 }
 const statusOptions=[['draft','草稿'],['published','公开']];
@@ -222,7 +225,7 @@ async function seriesEditor(item=null){
   field({name:'title',label:'系列名称',value:item?.title,required:true}),
   field({name:'slug',label:'系列网址标识（英文小写及连字符）',value:item?.slug,required:true,readonly:!!item}),
   field({name:'description',label:'系列简介',value:item?.description,type:'textarea'}),
-  field({name:'art',label:'封面图片地址（选填）',value:item?.art}),
+  field({name:'art',label:'系列封面（上传图片或填网址）',value:item?.art}),
   field({name:'category',label:'系列类别',options:categoryOptions,value:item?.category||'essay'}),
   field({name:'theme',label:'封面主题配色',options:themeOptions,value:item?.theme||'sage'}),
   field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'published'}),
@@ -243,7 +246,7 @@ function bookEditor(item=null,defaultSlug=''){
   field({name:'title',label:'书名',value:item?.title,required:true}),
   field({name:'series_slug',label:'所属系列',options,value:item?.series_slug??defaultSlug}),
   field({name:'description',label:'书籍简介',type:'textarea',value:item?.description}),
-  field({name:'cover_url',label:'书籍封面网址（选填）',value:item?.cover_url}),
+  field({name:'cover_url',label:'书籍封面（上传图片或填网址）',value:item?.cover_url}),
   field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'}),
   field({name:'sort_order',label:'排序',type:'number',value:item?.sort_order??0})
  ],data=>api(payload(item?'book-update':'book-create',{...data,...(item?{id:item.id}:{language:state.lang})})));

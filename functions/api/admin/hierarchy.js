@@ -7,7 +7,7 @@ const lang=v=>{const s=str(v,2);if(!['zh','en'].includes(s))throw Error('语言�
 const status=v=>{const s=str(v,20);if(!['draft','published'].includes(s))throw Error('发布状态无效。');return s;};
 const series=v=>{const s=str(v,90).toLowerCase();if(s&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s))throw Error('系列标识无效。');return s;};
 const title=v=>{const s=str(v,200);if(!s)throw Error('请填写名称。');return s;};
-const cover=v=>{const s=str(v,900);if(s&&!/^https:\/\/[^\s<>"']+$/i.test(s)&&!/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp)$/i.test(s))throw Error('封面地址格式错误。');return s;};
+const cover=v=>{const s=str(v,900);if(s&&!/^https:\/\/[^\s<>"']+$/i.test(s)&&!/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp|gif)$/i.test(s)&&!/^\/media\/covers\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/i.test(s))throw Error('封面地址格式错误。');return s;};
 async function enabled(db){return !!await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_section_links'").first();}
 async function seriesEnabled(db){return !!await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trn_series'").first();}
 const seriesData=data=>{

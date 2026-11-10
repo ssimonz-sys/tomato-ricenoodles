@@ -26,7 +26,7 @@ function sectionItem(s,n){
 function bookCard(b){
  const chapterCount=content.chapters.filter(ch=>ch.book_id===b.id).length;
  const art=seriesFor(b.series_slug)?.art;
- const cover=/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp)$/i.test(b.cover_url||'')||/^https:\/\/[^\s<>"']+$/i.test(b.cover_url||'')?b.cover_url:art||'/assets/graphics/'+(zh?'zh-basic-humanities.svg':'en-basic-human-science.svg');
+ const cover=/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp|gif)$/i.test(b.cover_url||'')||/^\/media\/covers\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/i.test(b.cover_url||'')||/^https:\/\/[^\s<>"']+$/i.test(b.cover_url||'')?b.cover_url:art||'/assets/graphics/'+(zh?'zh-basic-humanities.svg':'en-basic-human-science.svg');
  return '<a class="hier-book-card" href="'+bookUrl(b.id)+'"><img src="'+esc(cover)+'" alt="" loading="lazy"><span><strong>'+esc(b.title)+'</strong><small>'+esc(b.description||'')+'</small><em>'+chapterCount+' '+(zh?'章':'chapters')+' ↗</em></span></a>';
 }
 function showBook(){

@@ -12,7 +12,7 @@
   };
   const route=(file)=>root+file+(demo?(file.includes('?')?'&':'?')+'demo=1':'');
   const colRoute=(slug)=>route(`collections.html?slug=${encodeURIComponent(slug)}`);
-  const artUrl=c=>/^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp))$/i.test(c.art||'')?c.art:'';
+  const artUrl=c=>/^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)|\/media\/covers\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif))$/i.test(c.art||'')?c.art:'';
   const postRoute=p=>route(`read.html?slug=${encodeURIComponent(p.slug)}`);
   const themeKey=`trn-theme-${lang}`;
   try{if(localStorage.getItem(themeKey)==='dark')d.documentElement.dataset.theme='dark';}catch{}
@@ -39,7 +39,7 @@
   async function getPosts(){if(demo)return previewPosts;const r=await fetch(`/api/posts?lang=${lang}`,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('API '+r.status);return (await r.json()).posts||[];}
   function card(c,posts){const count=posts.filter(p=>(p.collection_slugs||[]).includes(c.slug)).length;const symbol={copper:'↗',sage:'◌',ink:'§',stone:'文',blue:'✦'}[c.theme]||'✳';const art=artUrl(c);return `<a class="collection-card" href="${colRoute(c.slug)}"><div class="cover ${escape(c.theme)} ${art?'has-art':''}">${art?`<img src="${art}" alt="" loading="lazy" decoding="async">`:''}<span class="cover-label">${zh?'专题文集':'THE COLLECTION'}</span><span class="cover-ornament" aria-hidden="true">${symbol}</span><span class="cover-mark" aria-hidden="true">${String(count).padStart(2,'0')}</span></div><div class="collection-info"><strong>${escape(c.title)}</strong><p>${escape(c.description||'')}</p><small>${count} ${zh?'篇文章':'PIECES'} &nbsp; ↗</small></div></a>`;}
   const fallbackCover={en:{essay:'/assets/graphics/en-basic-human-science.svg',fiction:'/assets/graphics/en-organziology.svg',poetry:'/assets/graphics/en-on-ethics.svg',note:'/assets/graphics/en-hero.svg'},zh:{essay:'/assets/graphics/zh-basic-humanities.svg',fiction:'/assets/graphics/zh-short-fiction.svg',poetry:'/assets/graphics/zh-poems.svg',note:'/assets/graphics/zh-on-morality.svg'}};
-  function coverFor(p){const url=p.cover_url||'';return /^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp))$/i.test(url)?url:fallbackCover[lang][p.type]||fallbackCover[lang].essay;}
+  function coverFor(p){const url=p.cover_url||'';return /^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)|\/media\/covers\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif))$/i.test(url)?url:fallbackCover[lang][p.type]||fallbackCover[lang].essay;}
   function listing(p){const minutes=Math.max(1,Math.ceil(Number(p.word_count||1)/(zh?360:230)));return `<a class="post-card has-thumb" href="${postRoute(p)}"><div class="post-copy"><div class="post-meta"><span>${escape(u.type[p.type]||p.type)}</span><span>${escape(displayDate(p.published_at))}</span><span>${minutes} ${u.reading}</span><span>${zh?'阅读':'Reads'} ${Number(p.views||0).toLocaleString()}</span><span>♥ ${Number(p.likes||0).toLocaleString()}</span></div><h3>${escape(p.title)}</h3><p>${escape(p.excerpt||'')}</p><span class="post-arrow" aria-hidden="true">↗</span></div><img class="post-thumb" src="${escape(coverFor(p))}" alt="" loading="lazy" decoding="async"></a>`;}
 
   function previewBanner(container){if(demo){const n=d.createElement('p');n.className='eyebrow';n.style.cssText='padding:10px 0;color:var(--accent)';n.textContent=u.demo;container.parentNode.insertBefore(n,container);}}

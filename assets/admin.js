@@ -3,6 +3,7 @@
   const $ = s=>document.querySelector(s);
   const state={csrf:'',posts:[],editing:null,dirty:false,preview:false,version:0,autoSaving:false};
   const form=$('#editor');
+  window.TRNCoverUpload?.attach(form.elements.cover_url,{getCsrf:()=>state.csrf});
   let autoTimer=null;
   const startParams=new URLSearchParams(location.search);
   let pendingChapter=/^[0-9a-f-]{36}$/.test(startParams.get('chapter')||'')?startParams.get('chapter'):null;
@@ -137,6 +138,7 @@
     $('#save-status').textContent='';$('#editor-message').textContent='';
     renderList();
     updatePublishControls();recover(p);
+    window.TRNCoverUpload?.refresh(form.elements.cover_url);
     if(!p)form.elements.title.focus();
   }
   function updatePublishControls(){
