@@ -91,6 +91,19 @@ function render(){
 }
 function renderStructure(){
   const slot=$('#manager-series-list'),standalone=$('#manager-standalone');
+  const requestedBook=new URLSearchParams(location.search).get('book');
+  if(requestedBook && state.enabled){
+    const selected=bookFor(requestedBook);
+    if(!selected){
+      slot.innerHTML='<div class="manager-empty">书籍不存在或已被删除。<a href="/admin/manage/">返回书架</a></div>';
+      standalone.innerHTML='';return;
+    }
+    if(selected.language!==state.lang)state.lang=selected.language;
+    $('#manager-language').value=state.lang;
+    slot.innerHTML=renderBookDetails(selected);
+    standalone.innerHTML='';
+    return;
+  }
   if(!state.enabled){
     slot.innerHTML='<div class="manager-empty">书籍管理数据库尚未初始化。请先完成之前的书、章、节 D1 升级。</div>';
     standalone.innerHTML='';return;
@@ -121,11 +134,29 @@ function renderSeries(item){
 }
 function renderBook(book,reorderable=false){
   const chapters=state.chapters.filter(c=>c.book_id===book.id).sort(chapterOrder);
-  return '<details class="manager-book" data-book-id="'+esc(book.id)+'" open><summary>'+(reorderable?'<span class="manager-drag-handle" draggable="true" title="拖动调整书籍顺序" aria-label="拖动调整书籍顺序">⠿</span>':'')+'<span class="manager-expand-symbol" aria-hidden="true"></span><span><strong>书 · '+esc(book.title)+'</strong><small>'+chapters.length+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></span></summary>'+
-  '<div class="manager-nested">'+
-  '<div class="manager-nested-actions">'+button('chapter-new',book.id,'＋ 新建章')+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
-  (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">这本书还没有章节。</p>')+
-  '</div></details>';
+  const count=chapters.length;
+  return '<div class="manager-book manager-book-card" data-book-id="'+esc(book.id)+'">'+
+    (reorderable?'<span class="manager-drag-handle" draggable="true" title="拖动排序" aria-label="拖动排序 '+esc(book.title)+'">⠿</span>':'')+
+    '<a class="manager-book-open" href="/admin/manage/?book='+encodeURIComponent(book.id)+'">'+
+      '<strong>书 · '+esc(book.title)+'</strong>'+
+      '<small>'+count+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></a>'+
+    '<span class="manager-book-next" aria-hidden="true">›</span>'+
+  '</div>';
+}
+function renderBookDetails(book){
+  const chapters=state.chapters.filter(c=>c.book_id===book.id).sort(chapterOrder);
+  const series=state.series.find(s=>s.language===book.language&&s.slug===book.series_slug);
+  return '<section class="manager-book-details">'+
+    '<a href="/admin/manage/" class="manager-book-back">← 返回系列书架</a>'+
+    '<div class="manager-book-details-header"><div>'+
+      '<p class="manager-kicker">'+(series?'所属系列 · '+esc(series.title):'独立书籍')+'</p>'+
+      '<h2>'+esc(book.title)+'</h2><p>'+esc(book.description||'')+'</p>'+
+      '<small>'+chapters.length+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></div>'+
+      '<div class="manager-actions">'+button('chapter-new',book.id,'＋ 添加章节')+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
+    '</div>'+
+    '<div class="manager-book-detail-chapters">'+
+      (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">还没有章节。可以添加一章，再把文章放进去。单篇作品也照此管理。</p>')+
+    '</div></section>';
 }
 function renderChapter(chapter){
   const links=state.links.filter(l=>l.chapter_id===chapter.id).sort(rank);
