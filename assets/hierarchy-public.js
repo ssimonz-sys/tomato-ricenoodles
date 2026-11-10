@@ -15,6 +15,7 @@ let content=null;
 const bookBy=id=>content.books.find(b=>b.id===id);
 const chapterBy=id=>content.chapters.find(c=>c.id===id);
 const sectionFor=id=>content.sections.filter(s=>s.chapter_id===id).sort((a,b)=>a.sort_order-b.sort_order);
+const seriesFor=slug=>(content?.series||window.TRN?.collections?.[lang]||[]).find(c=>c.slug===slug);
 function title(t,defaultText){d.title=(t||defaultText)+' | '+(zh?'番茄米线':'Tomato Ricenoodles');}
 function breadcrumb(links){
  return '<nav class="hier-breadcrumb" aria-label="'+(zh?'路径导航':'Breadcrumbs')+'">'+links.map(([name,url])=>url?'<a href="'+esc(url)+'">'+esc(name)+'</a>':'<span>'+esc(name)+'</span>').join('<span class="hier-sep">›</span>')+'</nav>';
@@ -24,7 +25,7 @@ function sectionItem(s,n){
 }
 function bookCard(b){
  const chapterCount=content.chapters.filter(ch=>ch.book_id===b.id).length;
- const art=(window.TRN?.collections?.[lang]||[]).find(c=>c.slug===b.series_slug)?.art;
+ const art=seriesFor(b.series_slug)?.art;
  const cover=/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp)$/i.test(b.cover_url||'')||/^https:\/\/[^\s<>"']+$/i.test(b.cover_url||'')?b.cover_url:art||'/assets/graphics/'+(zh?'zh-basic-humanities.svg':'en-basic-human-science.svg');
  return '<a class="hier-book-card" href="'+bookUrl(b.id)+'"><img src="'+esc(cover)+'" alt="" loading="lazy"><span><strong>'+esc(b.title)+'</strong><small>'+esc(b.description||'')+'</small><em>'+chapterCount+' '+(zh?'章':'chapters')+' ↗</em></span></a>';
 }
@@ -34,7 +35,7 @@ function showBook(){
  if(!content.enabled){root.textContent=zh?'书籍目录尚未启用。':'Books are not enabled yet.';return;}
  if(!book){root.textContent=zh?'找不到这本书，或书籍尚未公开。':'Book not found or not published.';return;}
  title(book.title);
- const series=(window.TRN?.collections?.[lang]||[]).find(c=>c.slug===book.series_slug);
+ const series=seriesFor(book.series_slug);
  const trail=[[zh?'系列文集':'Collections',route('collections.html')]];
  if(series)trail.push([series.title,seriesUrl(series.slug)]);
  trail.push([book.title,null]);
@@ -49,7 +50,7 @@ function showChapter(){
  if(!book){root.textContent=zh?'书籍尚未公开。':'The book is not published.';return;}
  title(ch.title);
  const secs=sectionFor(ch.id);
- const serie=(window.TRN?.collections?.[lang]||[]).find(c=>c.slug===book.series_slug);
+ const serie=seriesFor(book.series_slug);
  const trail=[[zh?'系列文集':'Collections',route('collections.html')]];
  if(serie)trail.push([serie.title,seriesUrl(serie.slug)]);
  trail.push([book.title,bookUrl(book.id)],[ch.title,null]);

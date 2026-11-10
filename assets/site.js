@@ -3,7 +3,7 @@
   const d=document, body=d.body, lang=body.dataset.lang==='zh'?'zh':'en', zh=lang==='zh';
   const page=body.dataset.page, root=`/${lang}/`, cfg=window.TRN||{penName:'Tomato Ricenoodles',penNameZh:'番茄米线',links:{},collections:{en:[],zh:[]}};
   const qs=new URLSearchParams(location.search), demo=qs.get('demo')==='1', sampleSuffix=demo?'?demo=1':'';
-  const collections=cfg.collections?.[lang]||[];
+  const collections=[...(cfg.collections?.[lang]||[])];
   const $=s=>d.querySelector(s), escape=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const u=zh?{
     home:'首页',essay:'政论与随笔',fiction:'小说',poetry:'诗歌',note:'杂记',collections:'专题文集',about:'关于作者',all:'全部',reading:'分钟阅读',empty:'作品正在整理，文章发表后会出现在这里。',error:'暂时无法加载文章。',demo:'设计预览 · 以下文章是版式占位示例',count:n=>`共 ${n} 篇`,type:{essay:'政论随笔',fiction:'小说',poetry:'诗歌',note:'杂记'},noCollection:'这个专题还没有发布的文章。',back:'返回目录',night:'切换深色模式'
@@ -12,7 +12,7 @@
   };
   const route=(file)=>root+file+(demo?(file.includes('?')?'&':'?')+'demo=1':'');
   const colRoute=(slug)=>route(`collections.html?slug=${encodeURIComponent(slug)}`);
-  const artUrl=c=>/^\/assets\/graphics\/[a-z0-9-]+\.svg$/.test(c.art||'')?c.art:'';
+  const artUrl=c=>/^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp))$/i.test(c.art||'')?c.art:'';
   const postRoute=p=>route(`read.html?slug=${encodeURIComponent(p.slug)}`);
   const themeKey=`trn-theme-${lang}`;
   try{if(localStorage.getItem(themeKey)==='dark')d.documentElement.dataset.theme='dark';}catch{}
@@ -87,5 +87,17 @@
     let size=Number.parseInt(localStorage.getItem('trn-size-'+lang)||'18',10);if(!Number.isFinite(size)||size<14||size>28)size=18;
     const apply=()=>d.documentElement.style.setProperty('--read-size',size+'px');apply();$('#font-less')?.addEventListener('click',()=>{size=Math.max(14,size-1);apply();localStorage.setItem('trn-size-'+lang,size);});$('#font-more')?.addEventListener('click',()=>{size=Math.min(28,size+1);apply();localStorage.setItem('trn-size-'+lang,size);});
   }
-  if(page==='home')home();else if(page==='collections')collectionPage();else if(page==='read')readPage();
+  async function boot(){
+    if(page==='home'||page==='collections'){
+      try{
+        const response=await fetch('/api/series?lang='+lang,{headers:{Accept:'application/json'}});
+        if(response.ok){
+          const result=await response.json();
+          if(result.enabled && Array.isArray(result.series))collections.splice(0,collections.length,...result.series);
+        }
+      }catch(error){console.warn('Series list unavailable; using site defaults.',error);}
+    }
+    if(page==='home')await home();else if(page==='collections')await collectionPage();else if(page==='read')await readPage();
+  }
+  boot();
 })();
