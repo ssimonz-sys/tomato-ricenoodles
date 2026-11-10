@@ -54,11 +54,11 @@ export async function onRequestPost(context){
     if(chapterId&&chapterId!=='auto'){
       chapter=chapters.find(ch=>ch.id===chapterId);
       if(!chapter)return error('所选章节已不存在，请刷新目录。',409);
-    }else if(chapters.length===1){
-      chapter=chapters[0];
-    }else if(chapters.length===0){
+    }else{
+      // Every newly authored article becomes its own chapter by default.
+      // Existing multi-section chapters continue to work when selected.
       newChapterId=crypto.randomUUID();
-    }else return error('这本书有多个章节，请选择文章所属章节。',400);
+    }
   }
   const effectiveSeries=mode==='series'?selectedSeries:mode==='book'?book.series_slug:'';
   if(effectiveSeries&&hasSeries){
@@ -97,7 +97,7 @@ export async function onRequestPost(context){
   }
   if(mode==='book'&&newChapterId){
     steps.push(db.prepare('INSERT INTO trn_chapters(id,book_id,title,description,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
-      .bind(newChapterId,bookId,'正文','',p.status==='published'?'published':'draft',0,now,now));
+      .bind(newChapterId,bookId,p.title,'',p.status==='published'?'published':'draft',0,now,now));
   }
   if(hasHierarchy){
     if(mode==='book'){

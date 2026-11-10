@@ -103,7 +103,7 @@
     if(!['zh','en'].includes(f.language.value))throw Error('请选择发布站点。');
     if(!['draft','published'].includes(f.status.value))throw Error('请选择发布状态。');
     const p=placement?.getSelection();
-    if(p?.mode==='book'&&!p.chapter_id)throw Error('这本书有多个章节，请明确选择一个章节。');
+    if(p?.mode==='book'&&!p.chapter_id)throw Error('请选择将文章作为新章节，或收入现有章节。');
     if(p?.mode==='book'&&!p.book_id)throw Error('请先选择所属书籍。');
     return true;
   }

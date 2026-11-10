@@ -41,15 +41,11 @@
     function fillChapter(value=''){
       const chapters=meta.chapters.filter(row=>row.book_id===b.value).sort((x,y)=>String(x.created_at||'').localeCompare(String(y.created_at||'')));
       if(!b.value){
-        c.innerHTML='<option value="">无需选择章节</option>';c.disabled=true;
-      }else if(!chapters.length){
-        c.innerHTML='<option value="auto">自动创建唯一章节「正文」</option>';c.value='auto';c.disabled=true;
-      }else if(chapters.length===1){
-        c.innerHTML=fields([[chapters[0].id,chapters[0].title+(chapters[0].status==='draft'?'（章节草稿）':'')]],chapters[0].id);
+        c.innerHTML='<option value="">独立文章不需要章节</option>';
         c.disabled=true;
       }else{
-        c.innerHTML=fields([['','请选择章节'],...chapters.map(row=>[row.id,row.title+(row.status==='draft'?'（章节草稿）':'')])],value);
-        if(c.value!==value)c.value='';
+        c.innerHTML=fields([['auto','作为新章节（使用文章标题）'],...chapters.map(row=>[row.id,row.title+(row.status==='draft'?'（章节草稿）':'')])],value||'auto');
+        if(c.value!==(value||'auto'))c.value='auto';
         c.disabled=false;
       }
       updateHint();
@@ -61,7 +57,7 @@
         const privateParents=[book,chapter,meta.series.find(row=>row.slug===s.value&&row.language===language())].filter(row=>row?.status==='draft');
         hint.textContent=published()?
           (privateParents.length?'发布时会询问是否同时公开所属的草稿书籍、章节或系列。':'发布后文章会出现在这本书中。'):
-          '文章会保存在所选书籍中。没有章节时自动创建一个「正文」章节。';
+          '默认把这篇文章作为新章节加入书籍，也可以选择一个现有章节。';
       }else if(s.value){
         const serie=meta.series.find(row=>row.slug===s.value&&row.language===language());
         hint.textContent=published()&&serie?.status==='draft'?'发布时会询问是否公开这个系列。':'文章将直接收入该系列，不需要先创建书籍。';
@@ -140,7 +136,7 @@
           op:'book-create',language:language(),series_slug:s.value,title:title.trim(),status:'draft',description:''
         })});
         await refresh();fillBook(result.id);fillChapter();
-        hint.textContent='书籍已创建。若它只有一章，发布时会自动添加「正文」章节。';
+        hint.textContent='书籍已创建。新写的文章会自动作为一章加入。';
       }catch(e){alert('创建书籍失败：'+e.message);}
     });
     fillSeries();fillBook();fillChapter();
