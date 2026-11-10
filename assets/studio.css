@@ -115,3 +115,12 @@ html[data-admin-theme="dark"] #studio-rich-editor .studio-paragraph-tool:hover{b
 .studio-paper .markdown-preview p:has(> span[data-trn-indent="3"]){padding-inline-start:6em}
 #studio-rich-editor .toastui-editor-contents p:has(> span[data-trn-indent="4"]),
 .studio-paper .markdown-preview p:has(> span[data-trn-indent="4"]){padding-inline-start:8em}
+
+/* Match the published reader in the full-article and inline editor previews. */
+.studio-paper .markdown-preview p,
+.studio-paper .markdown-preview li,
+#studio-rich-editor .toastui-editor-md-preview p,
+#studio-rich-editor .toastui-editor-md-preview li{
+  white-space:break-spaces;
+  tab-size:4;
+}

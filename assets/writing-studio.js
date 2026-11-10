@@ -398,7 +398,7 @@
     if (readingPreview) {
       const markdown = getMarkdown();
       panel.innerHTML = (window.marked && window.DOMPurify)
-        ? window.DOMPurify.sanitize(window.marked.parse(markdown,{gfm:true}))
+        ? (window.TRNReadingLayout?.render(markdown,window.marked,window.DOMPurify)??window.DOMPurify.sanitize(window.marked.parse(markdown,{gfm:true,breaks:true})))
         : '<p>预览功能需要加载 Markdown 组件。</p>';
       panel.hidden = false;
       richMount.hidden = true;

@@ -23,3 +23,10 @@ body[data-lang=zh] .topline{background:#4c493a}.zh-header .nav-inner{min-height:
 .article-body p:has(> span[data-trn-indent="2"]){padding-inline-start:4em}
 .article-body p:has(> span[data-trn-indent="3"]){padding-inline-start:6em}
 .article-body p:has(> span[data-trn-indent="4"]){padding-inline-start:8em}
+
+/* Authorial soft breaks and manual spacing in prose.
+   Only prose/list text adopts this so code, headings, and tables remain normal. */
+.article-body p,.article-body li{
+  white-space:break-spaces;
+  tab-size:4;
+}

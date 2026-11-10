@@ -172,7 +172,7 @@
     state.preview=!state.preview;$('#content-body').hidden=state.preview;$('#markdown-preview').hidden=!state.preview;$('#preview-toggle').textContent=state.preview?'返回编辑':'预览';
     if(state.preview){
       const raw=form.elements.body.value;
-      $('#markdown-preview').innerHTML=(window.marked&&window.DOMPurify)?window.DOMPurify.sanitize(window.marked.parse(raw)):'<p>Markdown 预览需要网络连接。</p>';
+      $('#markdown-preview').innerHTML=(window.marked&&window.DOMPurify)?(window.TRNReadingLayout?.render(raw,window.marked,window.DOMPurify)??window.DOMPurify.sanitize(window.marked.parse(raw,{gfm:true,breaks:true}))):'<p>Markdown 预览需要网络连接。</p>';
     }
   });
   form.addEventListener('submit',async e=>{
