@@ -106,14 +106,24 @@
     form.elements.language.addEventListener('change',()=>{fillSeries();fillBook();fillChapter();});
     form.elements.status.addEventListener('change',updateHint);
     root.querySelector('#place-refresh').addEventListener('click',async()=>{await refresh();hint.textContent='目录已刷新。';});
+    async function ensureReady(){
+      if(!meta.enabled){
+        await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({op:'hierarchy-init'})});
+        await refresh();
+      }
+      if(!meta.seriesEnabled){
+        const defaults=['zh','en'].flatMap(lang=>(window.TRN?.collections?.[lang]||[]).map(row=>({...row,language:lang})));
+        await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({op:'series-init',defaults})});
+        await refresh();
+      }
+    }
     root.querySelector('#place-add-series').addEventListener('click',async()=>{
       const title=prompt('新系列名称（例如：早期作品）');
       if(!title?.trim())return;
-      if(!meta.enabled){alert('请先在作品管理中完成书籍目录初始化。');return;}
       const normalized=title.trim().toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
       const slug=normalized&&normalized.length<=80?normalized:'series-'+crypto.randomUUID().slice(0,8);
       try{
-        if(!meta.seriesEnabled)await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({op:'series-init',defaults:[]})});
+        await ensureReady();
         await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({
           op:'series-create',language:language(),slug,title:title.trim(),status:'draft',description:'',category:form.elements.type.value
         })});
@@ -124,8 +134,8 @@
     root.querySelector('#place-add-book').addEventListener('click',async()=>{
       const title=prompt('新书名称（单篇、多章的书都在这里创建）');
       if(!title?.trim())return;
-      if(!meta.enabled){alert('请先在作品管理中完成书籍目录初始化。');return;}
       try{
+        await ensureReady();
         const result=await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({
           op:'book-create',language:language(),series_slug:s.value,title:title.trim(),status:'draft',description:''
         })});
