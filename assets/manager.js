@@ -13,7 +13,7 @@ const sectionLink=id=>state.links.find(link=>link.post_id===id);
 const bookFor=id=>state.books.find(book=>book.id===id);
 const chapterFor=id=>state.chapters.find(chapter=>chapter.id===id);
 const postFor=id=>state.posts.find(post=>post.id===id);
-const writeLink=(id=null,lang=state.lang,chapterId=null)=>'/admin/?'+(id?'id='+encodeURIComponent(id):'new=1&lang='+encodeURIComponent(lang)+(chapterId?'&chapter='+encodeURIComponent(chapterId):''));
+const writeLink=(id=null,lang=state.lang,chapterId=null,bookId=null)=>'/admin/?'+(id?'id='+encodeURIComponent(id):'new=1&lang='+encodeURIComponent(lang)+(chapterId?'&chapter='+encodeURIComponent(chapterId):'')+(bookId?'&book='+encodeURIComponent(bookId):''));
 const payload=(op,data)=>({op,...data});
 const button=(action,id,text,kind='')=>'<button type="button" class="manager-mini '+kind+'" data-action="'+esc(action)+'" data-id="'+esc(id)+'">'+esc(text)+'</button>';
 async function request(path,options={}){
@@ -154,7 +154,7 @@ function renderBookDetails(book){
       '<p class="manager-kicker">'+(series?'所属系列 · '+esc(series.title):'独立书籍')+'</p>'+
       '<h2>'+esc(book.title)+'</h2><p>'+esc(book.description||'')+'</p>'+
       '<small>'+chapters.length+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></div>'+
-      '<div class="manager-actions">'+button('chapter-new',book.id,'＋ 添加章节')+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
+      '<div class="manager-actions">'+'<a class="manager-mini manager-write-chapter" href="'+writeLink(null,book.language,null,book.id)+'">＋ 写新章</a>'+button('book-edit',book.id,'编辑书籍')+button('book-delete',book.id,'删除书籍','danger')+'</div>'+
     '</div>'+
     '<div class="manager-book-detail-chapters">'+
       (chapters.length?chapters.map(renderChapter).join(''):'<p class="manager-subempty">还没有章节。你可以在写作页新建文章并选择这本书，系统会自动把文章作为一章加入。</p>')+
@@ -164,12 +164,12 @@ function renderChapter(chapter){
   const links=state.links.filter(l=>l.chapter_id===chapter.id).sort((a,b)=>
     String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.post_id).localeCompare(String(b.post_id)));
   return '<details class="manager-chapter" open><summary><span class="manager-expand-symbol" aria-hidden="true"></span><span><strong>章 · '+esc(chapter.title)+'</strong><small>'+links.length+' 节 · '+(chapter.status==='published'?'公开':'草稿')+'</small></span></summary><div class="manager-chapter-contents">'+
-  '<div class="manager-nested-actions">'+button('section-new',chapter.id,'＋ 写新节')+button('section-link',chapter.id,'关联文章')+button('chapter-edit',chapter.id,'编辑章')+button('chapter-delete',chapter.id,'删除章','danger')+'</div>'+
+  '<div class="manager-nested-actions">'+button('section-new',chapter.id,'＋ 添加节')+'<a class="manager-mini" href="'+writeLink(null,bookFor(chapter.book_id)?.language||state.lang,chapter.id)+'">开始写本章</a>'+button('section-link',chapter.id,'关联已有文章')+button('chapter-edit',chapter.id,'编辑章')+button('chapter-delete',chapter.id,'删除章','danger')+'</div>'+
   (links.length?links.map(link=>{
     const p=postFor(link.post_id);
     if(!p)return '';
     return '<div class="manager-section-row"><span><strong>节 · '+esc(p.title)+'</strong><small>'+ (p.status==='published'?'已发布':'草稿')+'</small></span><div class="manager-actions"><a class="manager-mini" href="'+writeLink(p.id)+'">写作</a>'+button('section-move',p.id,'调整归属')+button('section-unlink',p.id,'移出','danger')+'</div></div>';
-  }).join(''):'<p class="manager-subempty">暂无小节。可以新建一节，也可以将已有文章关联过来。</p>')+
+  }).join(''):'<p class="manager-subempty">这一章还没有正文，可以点击「开始写本章」。</p>')+
   '</div></details>';
 }
 function renderArticles(){
@@ -331,7 +331,7 @@ async function act(action,id){
   case 'book-new-in-series':if(series)bookEditor(null,series.slug);break;
   case 'book-edit':if(book)bookEditor(book);break;
   case 'book-delete':if(book)await remove('book-delete',{id:book.id},'删除书籍「'+book.title+'」？需要先移除所有章节，正文不会因此删除。');break;
-  case 'chapter-new':if(book)chapterEditor(book);break;
+  case 'chapter-new':if(book)location.href=writeLink(null,book.language,null,book.id);break;
   case 'chapter-edit':if(chapter)chapterEditor(bookFor(chapter.book_id),chapter);break;
   case 'chapter-delete':if(chapter)await remove('chapter-delete',{id:chapter.id},'删除章节「'+chapter.title+'」？有小节的章节无法删除。');break;
   case 'section-new':if(chapter)location.href=writeLink(null,bookFor(chapter.book_id)?.language||state.lang,chapter.id);break;

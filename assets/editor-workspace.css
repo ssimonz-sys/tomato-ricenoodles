@@ -76,3 +76,11 @@ html[data-admin-theme="dark"] .desk-head-inner .desk-nav-link{color:#c3d8c4}
 .studio-placement select:disabled{opacity:.65}
 html[data-admin-theme="dark"] .studio-publication-bar,html[data-admin-theme="dark"] .studio-placement{background:var(--paper);border-color:var(--border)}
 @media(max-width:750px){.studio-placement-fields{grid-template-columns:1fr}.studio-publication-bar,.studio-placement{padding:14px}}
+
+/* Persistent focus entry stays visible on long documents. */
+.studio-focus-fab{position:fixed;right:22px;bottom:24px;z-index:29;padding:11px 17px;border:1px solid var(--accent);border-radius:999px;background:var(--accent);color:#fff;font:700 13px var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.15);cursor:pointer}
+.studio-focus-fab:hover{filter:brightness(1.08)}
+.studio-focus-fab:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.studio-focus-mode .studio-focus-fab{background:var(--paper);color:var(--accent);border-color:var(--accent)}
+body:has(#desk-view[hidden]) .studio-focus-fab{display:none}
+@media(max-width:600px){.studio-focus-fab{right:12px;bottom:12px;padding:9px 13px;font-size:12px}}

@@ -27,6 +27,7 @@
   let autoTimer=null;
   const startParams=new URLSearchParams(location.search);
   let pendingChapter=/^[0-9a-f-]{36}$/.test(startParams.get('chapter')||'')?startParams.get('chapter'):null;
+  let pendingBook=/^[0-9a-f-]{36}$/.test(startParams.get('book')||'')?startParams.get('book'):null;
   let requestedId=/^[0-9a-f-]{36}$/.test(startParams.get('id')||'')?startParams.get('id'):null;
   const requestedLanguage=['zh','en'].includes(startParams.get('lang'))?startParams.get('lang'):'zh';
   const esc=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -88,7 +89,7 @@
     else if(startParams.get('new')==='1'||pendingChapter||!state.editing) {
       edit();
       form.elements.language.value=requestedLanguage;
-      placement?.load(null,{pendingChapter});
+      placement?.load(null,{pendingChapter,pendingBook});
       updatePublishControls();
     }
   }
@@ -200,6 +201,10 @@
           updated_at:new Date().toISOString()};
         const ix=state.posts.findIndex(p=>p.id===result.id);
         if(ix>=0)state.posts[ix]={...state.posts[ix],...updated};else state.posts.unshift(updated);
+        if(result.placement?.mode==='book' && result.auto_created_chapter && placement){
+          await placement.refresh();
+          placement.load({...updated,id:result.id},{pendingChapter:result.placement.chapter_id});
+        }
         discardBackup(priorKey);
         state.dirty=state.version!==stamp;
         if(state.dirty)backup();else discardBackup();
@@ -225,10 +230,10 @@
     state.editing=p?.id||null;state.dirty=false;state.preview=false;state.version=0;
     $('#editor-empty').hidden=true;form.hidden=false;$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
-    for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:'en',type:'essay',status:'draft'}[name]||'');
+    for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
     form.elements.tags.value=p?.tags?.join(', ')||'';form.elements.collection_slugs.value=p?.collection_slugs?.join(', ')||'';
     window.TRNStudio?.load(p?.body||'');
-    placement?.load(p,{pendingChapter});
+    placement?.load(p,{pendingChapter,pendingBook});
     $('#edit-label').textContent=p?'编辑文章':'新建文章';
     $('#delete-post').hidden=!p;
     $('#save-status').textContent='';$('#editor-message').textContent='';
@@ -252,9 +257,9 @@
   form.elements.status.addEventListener('change',updatePublishControls);
   $('#new-post').addEventListener('click',()=>{
     if(!canChange())return;
-    pendingChapter=null;
-    history.replaceState({},'',location.pathname+'?new=1');
-    edit();form.elements.language.value='zh';placement?.load(null,{pendingChapter});updatePublishControls();
+    pendingChapter=null;pendingBook=null;
+    history.replaceState({},'',location.pathname+'?new=1&lang=zh');
+    edit();form.elements.language.value='zh';placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();
   });
   form.addEventListener('input',changed);
   form.addEventListener('change',changed);
@@ -321,6 +326,6 @@
     catch(e){message('#editor-message',e.message);}
   });
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
-  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;placement?.load(null,{pendingChapter});updatePublishControls();return true;}};
+  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();return true;}};
   check();
 })();

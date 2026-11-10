@@ -157,6 +157,9 @@
     document.body.classList.remove('studio-focus-tools-visible');
     $('#studio-focus').textContent = next ? '退出专注' : '专注写作';
     $('#studio-focus').setAttribute('aria-pressed', String(next));
+    focusFab.textContent=next?'退出专注':'专注写作';
+    focusFab.title=next?'退出专注模式':'进入专注写作';
+    focusFab.setAttribute('aria-pressed',String(next));
     focusFormatting.hidden = !next;
     focusFormatting.textContent = '显示排版工具';
     focusFormatting.setAttribute('aria-pressed', 'false');
@@ -171,6 +174,15 @@
     }
   }
   $('#studio-focus').addEventListener('click', () => setFocusMode(!focused));
+  const focusFab=document.createElement('button');
+  focusFab.type='button';focusFab.id='studio-focus-fab';
+  focusFab.className='studio-focus-fab';
+  focusFab.textContent='专注写作';
+  focusFab.title='进入专注写作';
+  focusFab.setAttribute('aria-label','切换专注写作模式');
+  focusFab.setAttribute('aria-pressed','false');
+  document.body.append(focusFab);
+  focusFab.addEventListener('click',()=>setFocusMode(!focused));
   focusFormatting.addEventListener('click', () => {
     const visible = document.body.classList.toggle('studio-focus-tools-visible');
     focusFormatting.textContent = visible ? '收起排版工具' : '显示排版工具';

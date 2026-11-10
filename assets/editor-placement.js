@@ -76,16 +76,18 @@
         root.classList.add('is-unavailable');
       }
     }
-    function load(post,{pendingChapter=null}={}){
+    function load(post,{pendingChapter=null,pendingBook=null}={}){
       const link=meta.links.find(row=>row.post_id===post?.id);
       const chapter=meta.chapters.find(row=>row.id===(pendingChapter||link?.chapter_id));
-      const book=meta.books.find(row=>row.id===chapter?.book_id);
+      const linkedBook=meta.books.find(row=>row.id===chapter?.book_id);
+      const requestedBook=meta.books.find(row=>row.id===pendingBook&&row.language===language());
+      const book=linkedBook||requestedBook;
       let series='';
       if(book&&book.language===language())series=book.series_slug||'';
       else series=(post?.collection_slugs||[]).find(slug=>(meta.seriesEnabled?meta.series:fallbackSeries()).some(x=>x.slug===slug&&(!x.language||x.language===language())))||'';
       fillSeries(series);
       fillBook(book?.language===language()?book.id:'');
-      fillChapter(chapter?.id||'');
+      fillChapter(chapter?.id||'auto');
     }
     function getSelection(){
       const book=meta.books.find(x=>x.id===b.value);
@@ -140,7 +142,12 @@
       }catch(e){alert('创建书籍失败：'+e.message);}
     });
     fillSeries();fillBook();fillChapter();
-    return {refresh,load,getSelection,root,meta,hasLoaded:()=>loaded};
+    return {refresh,load,getSelection,root,meta,hasLoaded:()=>loaded,chooseBook(id){
+      const item=meta.books.find(x=>x.id===id&&x.language===language());
+      if(!item)return false;
+      fillSeries(item.series_slug||'');fillBook(item.id);fillChapter('auto');
+      return true;
+    }};
   }
   window.TRNPlacement={create};
 })();
