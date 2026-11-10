@@ -27,7 +27,7 @@
     state.csrf='';state.posts=[];state.editing=null;$('#desk-view').hidden=true;$('#login-view').hidden=false;$('#logout').hidden=true;$('#editor').hidden=true;
   });
   async function load(selectedId=state.editing){
-    const r=await req('/api/admin/posts');state.posts=r.posts||[];renderList();
+    const r=await req('/api/admin/posts');state.posts=r.posts||[];renderList();window.TRNHierarchy?.onPostsLoaded?.(state.posts);
     if(selectedId && state.posts.some(p=>p.id===selectedId))edit(selectedId);
   }
   function renderList(){
@@ -37,6 +37,7 @@
   }
   function canChange(){return !state.dirty||confirm('当前修改尚未保存，确定放弃修改吗？');}
   function edit(id=null){
+    window.TRNHierarchy?.clearPending?.();
     const p=state.posts.find(post=>post.id===id)||null;
     state.editing=p?.id||null;state.dirty=false;state.preview=false;
     $('#editor-empty').hidden=true;form.hidden=false;$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
@@ -97,6 +98,7 @@
     try{
       const r=await req(isEditing?`/api/admin/posts/${state.editing}`:'/api/admin/posts',{method:isEditing?'PUT':'POST',body:JSON.stringify(value)});
       state.dirty=false;state.editing=r.id;await load(r.id);
+      await window.TRNHierarchy?.onPostSaved?.(r.id);
       message('#editor-message',f.status.value==='published'?`已发布到${f.language.value==='zh'?'中文站':'英文站'}。`:'私密草稿已保存。');$('#save-status').textContent='已保存';updatePublishControls();
     }catch(e){message('#editor-message',e.message);}
     finally{$('#save-post').disabled=false;}
@@ -107,5 +109,6 @@
     catch(e){message('#editor-message',e.message);}
   });
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
+  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;updatePublishControls();return true;}};
   check();
 })();
