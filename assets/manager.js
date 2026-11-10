@@ -2,7 +2,10 @@
 (() => {
 'use strict';
 const $=s=>document.querySelector(s);
-const state={csrf:'',posts:[],series:[],books:[],chapters:[],links:[],enabled:false,seriesEnabled:false,lang:'zh',tab:'structure',category:'all',publication:'all',commentFilter:'pending',engagementEnabled:false,comments:[],stats:[]};
+const edition=window.TRNAdminSite?.lang||null;
+const writer=lang=>'/admin/'+(edition||lang)+'/';
+const managerRoot=lang=>'/admin/'+(edition||lang)+'/manage/';
+const state={csrf:'',posts:[],series:[],books:[],chapters:[],links:[],enabled:false,seriesEnabled:false,lang:edition||'zh',tab:'structure',category:'all',publication:'all',commentFilter:'pending',engagementEnabled:false,comments:[],stats:[]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const types={essay:'政论与随笔',fiction:'小说',poetry:'诗歌',note:'笔记与杂记'};
 const langLabel=l=>l==='zh'?'中文站':'英文站';
@@ -13,7 +16,7 @@ const sectionLink=id=>state.links.find(link=>link.post_id===id);
 const bookFor=id=>state.books.find(book=>book.id===id);
 const chapterFor=id=>state.chapters.find(chapter=>chapter.id===id);
 const postFor=id=>state.posts.find(post=>post.id===id);
-const writeLink=(id=null,lang=state.lang,chapterId=null,bookId=null)=>'/admin/?'+(id?'id='+encodeURIComponent(id):'new=1&lang='+encodeURIComponent(lang)+(chapterId?'&chapter='+encodeURIComponent(chapterId):'')+(bookId?'&book='+encodeURIComponent(bookId):''));
+const writeLink=(id=null,lang=state.lang,chapterId=null,bookId=null)=>writer(lang)+'?'+(id?'id='+encodeURIComponent(id):'new=1&lang='+encodeURIComponent(lang)+(chapterId?'&chapter='+encodeURIComponent(chapterId):'')+(bookId?'&book='+encodeURIComponent(bookId):''));
 const payload=(op,data)=>({op,...data});
 const button=(action,id,text,kind='')=>'<button type="button" class="manager-mini '+kind+'" data-action="'+esc(action)+'" data-id="'+esc(id)+'">'+esc(text)+'</button>';
 async function request(path,options={}){
@@ -85,7 +88,7 @@ function render(){
   $('#manager-articles').hidden=state.tab!=='articles';
   $('#manager-comments').hidden=state.tab!=='comments';
   $('#manager-init-engagement').hidden=state.engagementEnabled;
-  $('#manager-pending-count').textContent=state.comments.filter(c=>c.status==='pending').length||'';
+  $('#manager-pending-count').textContent=state.comments.filter(c=>c.status==='pending'&&c.language===state.lang).length||'';
   $('#manager-category-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.category===state.category));
   $('#manager-publication-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.status===state.publication));
   $('#manager-comment-tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.commentStatus===state.commentFilter));
@@ -97,7 +100,11 @@ function renderStructure(){
   if(requestedBook && state.enabled){
     const selected=bookFor(requestedBook);
     if(!selected){
-      slot.innerHTML='<div class="manager-empty">书籍不存在或已被删除。<a href="/admin/manage/">返回书架</a></div>';
+      slot.innerHTML='<div class="manager-empty">书籍不存在或已被删除。<a href="'+managerRoot(state.lang)+'">返回书架</a></div>';
+      standalone.innerHTML='';return;
+    }
+    if(edition&&selected.language!==edition){
+      slot.innerHTML='<div class="manager-empty">这本书属于另一个语言站点。<a href="/admin/'+selected.language+'/manage/?book='+encodeURIComponent(selected.id)+'">打开对应后台</a></div>';
       standalone.innerHTML='';return;
     }
     if(selected.language!==state.lang)state.lang=selected.language;
@@ -139,7 +146,7 @@ function renderBook(book,reorderable=false){
   const count=chapters.length;
   return '<div class="manager-book manager-book-card" data-book-id="'+esc(book.id)+'">'+
     (reorderable?'<span class="manager-drag-handle" draggable="true" title="拖动排序" aria-label="拖动排序 '+esc(book.title)+'">⠿</span>':'')+
-    '<a class="manager-book-open" href="/admin/manage/?book='+encodeURIComponent(book.id)+'">'+
+    '<a class="manager-book-open" href="'+managerRoot(book.language)+'?book='+encodeURIComponent(book.id)+'">'+
       '<strong>书 · '+esc(book.title)+'</strong>'+
       '<small>'+count+' 章 · '+(book.status==='published'?'公开':'草稿')+'</small></a>'+
     '<span class="manager-book-next" aria-hidden="true">›</span>'+
@@ -149,7 +156,7 @@ function renderBookDetails(book){
   const chapters=state.chapters.filter(c=>c.book_id===book.id).sort(chapterOrder);
   const series=state.series.find(s=>s.language===book.language&&s.slug===book.series_slug);
   return '<section class="manager-book-details">'+
-    '<a href="/admin/manage/" class="manager-book-back">← 返回系列书架</a>'+
+    '<a href="'+managerRoot(book.language)+'" class="manager-book-back">← 返回系列书架</a>'+
     '<div class="manager-book-details-header"><div>'+
       '<p class="manager-kicker">'+(series?'所属系列 · '+esc(series.title):'独立书籍')+'</p>'+
       '<h2>'+esc(book.title)+'</h2><p>'+esc(book.description||'')+'</p>'+
@@ -400,10 +407,17 @@ $('#manager-category-tabs').addEventListener('click',e=>{const button=e.target.c
 $('#manager-publication-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-status]');if(!button)return;state.publication=button.dataset.status;render();});
 $('#manager-comment-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-comment-status]');if(!button)return;state.commentFilter=button.dataset.commentStatus;render();});
 $('#manager-init-engagement').addEventListener('click',initEngagement);
-$('#manager-language').addEventListener('change',value=>{
-  if(new URLSearchParams(location.search).has('book'))history.replaceState({},'',location.pathname);
-  state.lang=value.target.value;render();
-});
+if(edition){
+  $('#manager-language').value=edition;
+  $('#manager-language').disabled=true;
+  $('#manager-language').hidden=true;
+  document.querySelector('label[for="manager-language"]')?.setAttribute('hidden','');
+}else{
+  $('#manager-language').addEventListener('change',value=>{
+    if(new URLSearchParams(location.search).has('book'))history.replaceState({},'',location.pathname);
+    state.lang=value.target.value;render();
+  });
+}
 $('#manager-search').addEventListener('input',renderArticles);
 $('#manager-only-unlinked').addEventListener('change',renderArticles);
 $('#manager-login-form').addEventListener('submit',async event=>{

@@ -1,6 +1,8 @@
 (() => {
   'use strict';
   const $ = s=>document.querySelector(s);
+  const edition=window.TRNAdminSite?.lang||null;
+  const editionWriter=lang=>'/admin/'+lang+'/';
   const state={csrf:'',posts:[],editing:null,dirty:false,preview:false,version:0,autoSaving:false};
   const form=$('#editor');
   // Browser validation used to silently stop submit for hidden required fields.
@@ -29,7 +31,7 @@
   let pendingChapter=/^[0-9a-f-]{36}$/.test(startParams.get('chapter')||'')?startParams.get('chapter'):null;
   let pendingBook=/^[0-9a-f-]{36}$/.test(startParams.get('book')||'')?startParams.get('book'):null;
   let requestedId=/^[0-9a-f-]{36}$/.test(startParams.get('id')||'')?startParams.get('id'):null;
-  const requestedLanguage=['zh','en'].includes(startParams.get('lang'))?startParams.get('lang'):'zh';
+  const requestedLanguage=edition||(['zh','en'].includes(startParams.get('lang'))?startParams.get('lang'):'zh');
   const esc=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function zhError(s){ const dict={'Database is not configured.':'数据库尚未配置。','Set up D1 and ADMIN_PASSWORD before signing in.':'请先配置 D1 数据库和管理员密码。','Cross-origin request rejected.':'跨站请求被拒绝。','Cross-origin login rejected.':'跨站登录请求被拒绝。','Invalid security token.':'安全验证失效，请重新登录。','Please sign in.':'请先登录。','Invalid JSON.':'请求数据格式有误。','Invalid credentials.':'密码不正确。','Too many sign-in attempts. Try again later.':'登录失败次数过多，请稍后再试。','An article with this slug already exists in this language.':'当前站点已存在相同网址标识的文章。','Article not found.':'未找到这篇文章。','Invalid id.':'文章编号无效。'};return dict[s]||s;}
   function message(selector,s){$(selector).textContent=zhError(s);}
@@ -82,7 +84,15 @@
   });
   async function load(selectedId=state.editing){
     initializeEditor();
-    const r=await req('/api/admin/posts');state.posts=r.posts||[];renderList();
+    const r=await req('/api/admin/posts');
+    const allPosts=r.posts||[];
+    const other=edition&&selectedId&&allPosts.find(x=>x.id===selectedId&&x.language!==edition);
+    if(other){
+      location.replace(editionWriter(other.language)+'?id='+encodeURIComponent(other.id));
+      return;
+    }
+    state.posts=edition?allPosts.filter(x=>x.language===edition):allPosts;
+    renderList();
     if(placement)await placement.refresh();
     const found=selectedId&&state.posts.some(p=>p.id===selectedId);
     if(found)edit(selectedId);
@@ -97,7 +107,7 @@
   function draftKey(id=state.editing){return 'trn-backup:'+ (id||('new-'+(pendingChapter||requestedLanguage)));}
   function collect(){
     const f=form.elements;
-    return {language:f.language.value,type:f.type.value,title:f.title.value,slug:f.slug.value,
+    return {language:edition||f.language.value,type:f.type.value,title:f.title.value,slug:f.slug.value,
       excerpt:f.excerpt.value,cover_url:f.cover_url.value,body:window.TRNStudio?.getMarkdown()??f.body.value,
       tags:f.tags.value,collection_slugs:f.collection_slugs.value,status:f.status.value};
   }
@@ -147,6 +157,7 @@
     if(f.title.value.trim().length>220)throw Error('文章标题过长。');
     if(!ensureSlug())throw Error('文章网址只能使用小写英文字母、数字和短横线。');
     if(!['zh','en'].includes(f.language.value))throw Error('请选择发布站点。');
+    if(edition&&f.language.value!==edition)throw Error('此后台仅能发布到当前语言站点。');
     if(!['draft','published'].includes(f.status.value))throw Error('请选择发布状态。');
     const p=placement?.getSelection();
     if(p?.mode==='book'&&!p.chapter_id)throw Error('请选择将文章作为新章节，或收入现有章节。');
@@ -231,6 +242,7 @@
     $('#editor-empty').hidden=true;form.hidden=false;$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
+    if(edition)form.elements.language.value=edition;
     form.elements.tags.value=p?.tags?.join(', ')||'';form.elements.collection_slugs.value=p?.collection_slugs?.join(', ')||'';
     window.TRNStudio?.load(p?.body||'');
     placement?.load(p,{pendingChapter,pendingBook});
@@ -253,13 +265,18 @@
     link.hidden=!show;
     if(show){link.href=`/${form.elements.language.value}/read.html?slug=${encodeURIComponent(slug)}`;link.textContent=form.elements.language.value==='zh'?'查看中文站文章 ↗':'查看英文站文章 ↗';}
   }
+  if(edition){
+    form.elements.language.value=edition;
+    form.elements.language.disabled=true;
+    form.elements.language.closest('label')?.setAttribute('hidden','');
+  }
   form.elements.language.addEventListener('change',updatePublishControls);
   form.elements.status.addEventListener('change',updatePublishControls);
   $('#new-post').addEventListener('click',()=>{
     if(!canChange())return;
     pendingChapter=null;pendingBook=null;
-    history.replaceState({},'',location.pathname+'?new=1&lang=zh');
-    edit();form.elements.language.value='zh';placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();
+    history.replaceState({},'',location.pathname+'?new=1'+(edition?'':'&lang=zh'));
+    edit();form.elements.language.value=edition||'zh';placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();
   });
   form.addEventListener('input',changed);
   form.addEventListener('change',changed);
@@ -326,6 +343,6 @@
     catch(e){message('#editor-message',e.message);}
   });
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
-  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=language;placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();return true;}};
+  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=edition||language;placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();return true;}};
   check();
 })();

@@ -15,7 +15,7 @@
       '<label>章节<select id="place-chapter" aria-label="选择所属章节" disabled><option value="">无需选择章节</option></select></label>'+
       '</div>'+
       '<div class="studio-placement-footer"><p id="place-hint">独立文章会直接显示在所选语言站点。</p>'+
-      '<div class="studio-placement-actions"><button type="button" id="place-add-series">＋新建系列</button><button type="button" id="place-add-book">＋新建书籍</button><button type="button" id="place-refresh">↻刷新目录</button><a href="/admin/manage/" target="_blank" rel="noopener">完整管理</a></div></div>';
+      '<div class="studio-placement-actions"><button type="button" id="place-add-series">＋新建系列</button><button type="button" id="place-add-book">＋新建书籍</button><button type="button" id="place-refresh">↻刷新目录</button><a href="'+(window.TRNAdminSite?.manager||'/admin/manage/')+'" target="_blank" rel="noopener">完整管理</a></div></div>';
     const target=form.querySelector('#studio-publication-bar')||form.querySelector('.body-top');
     target.after(root);
     const s=root.querySelector('#place-series'),b=root.querySelector('#place-book'),c=root.querySelector('#place-chapter');
