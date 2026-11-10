@@ -179,6 +179,7 @@
   }
   async function saveWorkflow(value,{askParents=false}={}){
     try{
+      await placement?.prepareSave?.();
       return await req('/api/admin/workflow',{method:'POST',body:JSON.stringify(makeWorkflow(value))});
     }catch(e){
       if(askParents&&e.details?.needs_parent_publication){

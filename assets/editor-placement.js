@@ -27,7 +27,12 @@
     const fields=(options,selected='')=>options.map(([value,title])=>'<option value="'+esc(value)+'"'+(value===selected?' selected':'')+'>'+esc(title)+'</option>').join('');
     const fallbackSeries=()=>window.TRN?.collections?.[language()]||[];
     function fillSeries(value=''){
-      const catalog=meta.seriesEnabled?meta.series.filter(row=>row.language===language()):fallbackSeries();
+      // Include existing DB collections and the site's configured collections.
+      // A missing configured collection is created only when the author saves
+      // a post into it, keeping normal page loads read-only.
+      const dbSeries=meta.seriesEnabled?meta.series.filter(row=>row.language===language()):[];
+      const configured=fallbackSeries().map(row=>({...row,language:language(),status:'published'}));
+      const catalog=[...dbSeries,...configured.filter(row=>!dbSeries.some(saved=>saved.slug===row.slug))];
       s.innerHTML=fields([['','独立文章 / 不加入系列'],...catalog.map(row=>[row.slug,row.title+(row.status==='draft'?'（系列草稿）':'')])],value);
       if(s.value!==value)s.value='';
     }
@@ -89,6 +94,30 @@
       fillBook(book?.language===language()?book.id:'');
       fillChapter(chapter?.id||'auto');
     }
+    async function prepareSave(){
+      const slug=s.value;
+      if(!slug||meta.series.some(row=>row.slug===slug&&row.language===language()))return;
+      const configured=fallbackSeries().find(row=>row.slug===slug);
+      if(!configured)throw Error('该系列尚未创建，请先刷新目录或创建系列。');
+      await ensureReady();
+      // Series-init seeds defaults when the table is new, but an existing
+      // database can be missing a newly added site-config collection.
+      if(!meta.series.some(row=>row.slug===slug&&row.language===language())){
+        try{
+          await request('/api/admin/hierarchy',{method:'POST',body:JSON.stringify({
+            op:'series-create',language:language(),slug:configured.slug,
+            title:configured.title,description:configured.description||'',
+            art:configured.art||'',theme:configured.theme||'sage',
+            category:configured.category||'essay',status:'published'
+          })});
+        }catch(e){
+          // A concurrent editor tab may have already inserted the same slug.
+          if(!/UNIQUE|constraint|already exists/i.test(e.message))throw e;
+        }
+        await refresh();
+        fillSeries(slug);
+      }
+    }
     function getSelection(){
       const book=meta.books.find(x=>x.id===b.value);
       return {
@@ -142,7 +171,7 @@
       }catch(e){alert('创建书籍失败：'+e.message);}
     });
     fillSeries();fillBook();fillChapter();
-    return {refresh,load,getSelection,root,meta,hasLoaded:()=>loaded,chooseBook(id){
+    return {refresh,load,getSelection,prepareSave,root,meta,hasLoaded:()=>loaded,chooseBook(id){
       const item=meta.books.find(x=>x.id===id&&x.language===language());
       if(!item)return false;
       fillSeries(item.series_slug||'');fillBook(item.id);fillChapter('auto');
