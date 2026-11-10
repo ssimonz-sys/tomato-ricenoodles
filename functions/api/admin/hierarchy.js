@@ -33,8 +33,22 @@ export async function onRequestGet(context){
 export async function onRequestPost(context){
   const a=await guard(context,true);if(a.failed)return a.failed;
   const db=context.env.DB;
-  if(!await enabled(db))return error('请先执行数据库升级脚本。',409);
   let data;try{data=await parseJson(context.request,20000);}catch{return error('请求格式有误。');}
+  if(data.op==='hierarchy-init'){
+    // Safe, idempotent setup for existing Cloudflare D1 without manual SQL.
+    const statements=[
+      "CREATE TABLE IF NOT EXISTS trn_books (id TEXT PRIMARY KEY,language TEXT NOT NULL CHECK(language IN ('en','zh')),series_slug TEXT NOT NULL DEFAULT '',title TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',cover_url TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published')),sort_order INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)",
+      "CREATE INDEX IF NOT EXISTS idx_trn_books_series ON trn_books(language,series_slug,sort_order)",
+      "CREATE TABLE IF NOT EXISTS trn_chapters (id TEXT PRIMARY KEY,book_id TEXT NOT NULL REFERENCES trn_books(id) ON DELETE RESTRICT,title TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published')),sort_order INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)",
+      "CREATE INDEX IF NOT EXISTS idx_trn_chapters_book ON trn_chapters(book_id,sort_order)",
+      "CREATE TABLE IF NOT EXISTS trn_section_links (post_id TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,chapter_id TEXT NOT NULL REFERENCES trn_chapters(id) ON DELETE RESTRICT,sort_order INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)",
+      "CREATE INDEX IF NOT EXISTS idx_trn_section_links_chapter ON trn_section_links(chapter_id,sort_order)"
+    ];
+    try{for(const sql of statements)await db.prepare(sql).run();}
+    catch(e){console.error('Hierarchy initialization failed',e);return error('目录初始化失败，请检查 D1 数据库权限。',500);}
+    return send({ok:true,enabled:true});
+  }
+  if(!await enabled(db))return error('书籍目录还没有初始化，请在写作页面创建书籍以自动开启。',409);
   const now=new Date().toISOString();
   try{
     switch(data.op){
