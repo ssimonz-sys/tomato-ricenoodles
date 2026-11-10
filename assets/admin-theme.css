@@ -1,0 +1,130 @@
+/* Private writing desk palette. Does not affect /en/ or /zh/. */
+.admin-desk {
+  --white:#fffefa; --border:#e0ded7; --paper:#f7f6f2;
+  --soft:#b3b1a5; --olive:#47614c;
+}
+.desk-head-inner #admin-theme-toggle {
+  margin-left:auto; white-space:nowrap; border:1px solid var(--line);
+  border-radius:18px; min-width:106px; padding:8px 11px;
+  background:transparent; color:var(--ink); font-size:12px;
+}
+.desk-head-inner #admin-theme-toggle:hover {background:var(--sand);}
+.desk-head-inner #logout {margin-left:0;}
+html[data-admin-theme="dark"] {
+  color-scheme:dark;
+  --bg:#141916; --ink:#e9ede7; --muted:#a5b1a7;
+  --line:#39453e; --accent:#d77c67; --green:#24392c;
+  --panel:#1d2520; --sand:#29332c;
+}
+html[data-admin-theme="dark"] .admin-desk {
+  --white:#1c241f; --border:#3a453e; --paper:#202a23;
+  --soft:#78867b; --olive:#bfd2b9;
+  background:var(--bg);color:var(--ink);
+}
+html[data-admin-theme="dark"] body:has(#desk-view:not([hidden])) {background:var(--bg);}
+html[data-admin-theme="dark"] .desk-header,
+html[data-admin-theme="dark"] .login-box,
+html[data-admin-theme="dark"] .draft-list,
+html[data-admin-theme="dark"] .edit-panel,
+html[data-admin-theme="dark"] .form-top,
+html[data-admin-theme="dark"] .draft-top {
+  background:var(--white);color:var(--ink);border-color:var(--border);
+}
+html[data-admin-theme="dark"] .desk-head-inner button {
+  color:var(--ink);border-color:var(--border);
+}
+html[data-admin-theme="dark"] .desk-head-inner button:hover {background:var(--sand);}
+html[data-admin-theme="dark"] .desk-title h1,
+html[data-admin-theme="dark"] .desk-head-inner>a,
+html[data-admin-theme="dark"] .draft-top h2,
+html[data-admin-theme="dark"] .admin-post,
+html[data-admin-theme="dark"] .edit-empty {color:var(--ink);}
+html[data-admin-theme="dark"] .admin-post {border-color:var(--line);}
+html[data-admin-theme="dark"] .admin-post:hover,
+html[data-admin-theme="dark"] .admin-post.active {background:#29362c;}
+html[data-admin-theme="dark"] .desk-container input,
+html[data-admin-theme="dark"] .desk-container select,
+html[data-admin-theme="dark"] .desk-container textarea {
+  background:#18211c;color:var(--ink);border-color:var(--border);
+}
+html[data-admin-theme="dark"] .desk-container input::placeholder,
+html[data-admin-theme="dark"] .desk-container textarea::placeholder {color:#88978a;opacity:1;}
+html[data-admin-theme="dark"] .desk-container label,
+html[data-admin-theme="dark"] .desk-container .body-top label {color:var(--ink);}
+html[data-admin-theme="dark"] .secondary,
+html[data-admin-theme="dark"] .studio-small-button {
+  background:#222d25;color:var(--ink);border-color:var(--border);
+}
+html[data-admin-theme="dark"] .secondary:hover,
+html[data-admin-theme="dark"] .studio-small-button:hover {background:#303d33;}
+html[data-admin-theme="dark"] .danger {background:transparent;color:#f0a99a;border-color:#9c645b;}
+html[data-admin-theme="dark"] .primary {background:#b95e4a;color:#fff;}
+html[data-admin-theme="dark"] .primary:hover {background:#ca6f59;}
+html[data-admin-theme="dark"] .form-top {border-bottom-color:var(--border);}
+html[data-admin-theme="dark"] .form-top .eyebrow {color:#bcc6b7;}
+html[data-admin-theme="dark"] .studio-paper input[name="title"] {
+  background:transparent;color:#f2f0e9;border-bottom-color:#465249;
+}
+html[data-admin-theme="dark"] .studio-paper input[name="excerpt"] {
+  background:transparent;color:#c4d0c3;border-bottom-color:#39483e;
+}
+html[data-admin-theme="dark"] .studio-paper input[name="title"]::placeholder,
+html[data-admin-theme="dark"] .studio-paper input[name="excerpt"]::placeholder {color:#89988a;}
+html[data-admin-theme="dark"] .studio-heading-guide {
+  background:#202a23;border-color:#3b493e;
+}
+html[data-admin-theme="dark"] .studio-heading-guide span,
+html[data-admin-theme="dark"] .studio-editor-hint,
+html[data-admin-theme="dark"] .studio-paper-info,
+html[data-admin-theme="dark"] .studio-outline-head span,
+html[data-admin-theme="dark"] .studio-outline-empty,
+html[data-admin-theme="dark"] .studio-outline-tip {color:#a6b5a6;}
+html[data-admin-theme="dark"] .studio-heading-guide button,
+html[data-admin-theme="dark"] .studio-heading-guide select {
+  background:#29362d;border-color:#46554a;color:var(--ink);
+}
+html[data-admin-theme="dark"] .studio-heading-guide button:hover {background:#34483a;color:#f4c9bc;}
+html[data-admin-theme="dark"] .studio-outline {border-color:var(--border);}
+html[data-admin-theme="dark"] .studio-outline-head strong,
+html[data-admin-theme="dark"] .studio-outline-link {color:#d1ddd0;}
+html[data-admin-theme="dark"] .studio-outline-link:hover,
+html[data-admin-theme="dark"] .studio-outline-link:focus-visible {background:#2a3b30;color:#f4b3a1;}
+html[data-admin-theme="dark"] .studio-outline-tip {border-top-color:var(--border);}
+html[data-admin-theme="dark"] .studio-flash {background:#55452d;}
+html[data-admin-theme="dark"] .studio-settings {
+  background:#1c241f;color:var(--ink);box-shadow:-15px 0 65px rgba(0,0,0,.5);
+}
+html[data-admin-theme="dark"] .studio-settings-head,
+html[data-admin-theme="dark"] .studio-settings-group {border-color:var(--border);}
+html[data-admin-theme="dark"] .studio-settings-group h3 {color:#d9a78d;}
+html[data-admin-theme="dark"] .studio-settings-head button {color:#cdd7cd;}
+html[data-admin-theme="dark"] .studio-backdrop {background:rgba(0,0,0,.65);}
+html[data-admin-theme="dark"] .studio-paper .markdown-preview {
+  background:#202a23;border-color:var(--border);color:var(--ink);
+}
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-defaultUI {
+  border-color:#465349;background:#1b241e;color:var(--ink);
+}
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-toolbar,
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-mode-switch {
+  background:#202b23;border-color:#39473b;
+}
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-contents {color:#e0e8df;}
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-ww-container,
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-md-container,
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-md-preview,
+html[data-admin-theme="dark"] #studio-rich-editor .toastui-editor-main {
+  background:#1b241e;color:#e0e8df;
+}
+html[data-admin-theme="dark"] .toastui-editor-dark .toastui-editor-contents,
+html[data-admin-theme="dark"] .toastui-editor-dark .toastui-editor-contents p,
+html[data-admin-theme="dark"] .toastui-editor-dark .ProseMirror {color:#e0e8df;}
+html[data-admin-theme="dark"] .toastui-editor-dark .toastui-editor-contents pre,
+html[data-admin-theme="dark"] .toastui-editor-dark .toastui-editor-contents code {color:#e8e1c5;}
+html[data-admin-theme="dark"] .publish-feedback,
+html[data-admin-theme="dark"] .pair-help {color:var(--muted);}
+@media(max-width:580px) {
+  .desk-head-inner #admin-theme-toggle {min-width:0;padding:8px;}
+  .desk-head-inner {gap:10px;}
+  .desk-head-inner>a {font-size:16px;}
+}

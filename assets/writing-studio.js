@@ -131,6 +131,7 @@
       rich.on('change', syncEditor);
       textarea.classList.add('studio-source-hidden');
       richMount.classList.add('is-ready');
+      window.TRNAdminTheme?.applyEditor();
     } catch(error) {
       rich = null;
       richMount.textContent = '';
