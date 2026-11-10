@@ -73,6 +73,8 @@ function render(){
   for(const key of ['series','books','chapters','posts'])$('#manager-stat-'+key).textContent=counts[key];
   $('#manager-language').value=state.lang;
   $('#manager-add-article').href=writeLink(null,state.lang);
+  const quickCreate=document.querySelector('.manager-heading-actions a.primary');
+  if(quickCreate)quickCreate.href=writeLink(null,state.lang);
   $('#manager-tab-structure').classList.toggle('active',state.tab==='structure');
   $('#manager-tab-articles').classList.toggle('active',state.tab==='articles');
   $('#manager-tab-comments').classList.toggle('active',state.tab==='comments');
@@ -177,10 +179,11 @@ function renderArticles(){
     const relation=sectionLink(p.id);
     const chapter=relation&&chapterFor(relation.chapter_id);
     const book=chapter&&bookFor(chapter.book_id);
-    const where=book?'收录：'+book.title+' / '+chapter.title:'独立文章';
+    const directSeries=(p.collection_slugs||[]).map(slug=>state.series.find(row=>row.language===p.language&&row.slug===slug)?.title).filter(Boolean);
+    const where=book?'收录：'+book.title+' / '+chapter.title:directSeries.length?'收录系列：'+directSeries.join('、'):'独立文章';
     const metrics=state.stats.find(s=>s.post_id===p.id);
     const stats=metrics?' · '+metrics.views+' 阅读 · '+metrics.likes+' 点赞 · '+metrics.comments+' 评论':' · '+(p.views||0)+' 阅读 · '+(p.likes||0)+' 点赞';
-    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字'+stats+'</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+button('article-link',p.id,relation?'调整章节':'加入章节')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
+    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字'+stats+'</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+button('article-link',p.id,'设置归属')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
   }).join(''):'<div class="manager-empty">没有找到符合条件的文章。</div>';
 }
 function renderComments(){
@@ -334,7 +337,7 @@ async function act(action,id){
   case 'section-new':if(chapter)location.href=writeLink(null,bookFor(chapter.book_id)?.language||state.lang,chapter.id);break;
   case 'section-link':if(chapter)linkEditor(chapter);break;
   case 'section-move':if(post)linkEditor(null,post);break;
-  case 'article-link':if(post)linkEditor(null,post);break;
+  case 'article-link':if(post)location.href=writeLink(post.id);break;
   case 'section-unlink':if(post)await remove('section-unlink',{post_id:post.id},'将「'+post.title+'」移出章节目录？文章正文仍会保留。');break;
   case 'article-delete':if(post)await removeArticle(post);break;
  }
@@ -397,7 +400,10 @@ $('#manager-category-tabs').addEventListener('click',e=>{const button=e.target.c
 $('#manager-publication-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-status]');if(!button)return;state.publication=button.dataset.status;render();});
 $('#manager-comment-tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-comment-status]');if(!button)return;state.commentFilter=button.dataset.commentStatus;render();});
 $('#manager-init-engagement').addEventListener('click',initEngagement);
-$('#manager-language').addEventListener('change',value=>{state.lang=value.target.value;render();});
+$('#manager-language').addEventListener('change',value=>{
+  if(new URLSearchParams(location.search).has('book'))history.replaceState({},'',location.pathname);
+  state.lang=value.target.value;render();
+});
 $('#manager-search').addEventListener('input',renderArticles);
 $('#manager-only-unlinked').addEventListener('change',renderArticles);
 $('#manager-login-form').addEventListener('submit',async event=>{
