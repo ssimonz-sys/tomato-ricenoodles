@@ -6,7 +6,7 @@ if(!sidebar)return;
 let books=[],chapters=[],links=[],posts=[],enabled=false,active=false,pending=null;
 const tabs=document.createElement('div');
 tabs.className='hier-tabs';
-tabs.innerHTML='<button class="active" type="button" data-tab="posts">单篇文章</button><button type="button" data-tab="hier">系列书架</button>';
+tabs.innerHTML='<button class="active" type="button" data-tab="posts">全部文章</button><button type="button" data-tab="hier">系列书架</button>';
 const toolbar=document.createElement('div');
 toolbar.className='hier-toolbar';
 toolbar.innerHTML='<button type="button" id="hier-create-book">＋ 新建书籍</button><button type="button" id="hier-refresh">刷新</button>';
