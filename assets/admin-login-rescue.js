@@ -24,7 +24,7 @@
       if(!response.ok)throw Error(body.error||'HTTP '+response.status);
       input.value='';
       notice.textContent='登录成功。写作页面组件暂时不可用，正在打开作品管理…';
-      location.assign('/admin/manage/');
+      location.assign(window.TRNAdminSite?.manager||'/admin/manage/');
     }catch(err){
       notice.textContent='登录失败：'+err.message;
     }finally{
