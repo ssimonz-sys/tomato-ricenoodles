@@ -80,7 +80,7 @@ async function mount(article){
   const button=form.querySelector('button[type="submit"]');
   button.disabled=true;
   try{const data=await submit({action:'comment',content:input.value,website:form.elements.website.value});
-    input.value='';notify(data.message||label.pending);
+    input.value='';notify(zh?(data.message||label.pending):label.pending);
   }catch(e){notify(e.message);}
   finally{button.disabled=false;}
  });
