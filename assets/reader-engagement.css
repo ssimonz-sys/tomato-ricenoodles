@@ -1,0 +1,28 @@
+/* Anonymous, moderated reading interactions for both independent editions. */
+.trn-reader-engagement{border-top:1px solid var(--line);margin:54px 0 48px;padding:30px 0 12px}
+.trn-engagement-bar{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding-bottom:23px;border-bottom:1px solid var(--line)}
+.trn-engagement-count{display:flex;align-items:baseline;gap:7px;color:var(--ink)}
+.trn-engagement-count strong{font:600 23px Georgia,"Songti SC",serif}
+.trn-engagement-count small{font:12px var(--sans);color:var(--muted)}
+.trn-engagement-actions{display:flex;gap:9px;margin-left:auto}
+.trn-engagement-actions button,.trn-comment-actions button{cursor:pointer;border:1px solid var(--border);border-radius:5px;padding:10px 16px;background:var(--paper);color:var(--ink);font:600 12px var(--sans)}
+.trn-engagement-actions button:hover,.trn-comment-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.trn-engagement-actions button:disabled{opacity:.65;cursor:default}
+.trn-interaction-status{font:12px/1.6 var(--sans);color:var(--accent);min-height:1em}
+.trn-comments{margin-top:28px}
+.trn-comments h2{font:500 23px/1.5 Georgia,"Songti SC",serif;color:var(--ink);margin:0 0 17px}
+.trn-comment-entry{padding:18px 3px;border-bottom:1px solid var(--line)}
+.trn-comment-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.trn-comment-head strong{font:600 12px var(--sans);color:var(--ink)}
+.trn-comment-head time{font:11px var(--sans);color:var(--muted)}
+.trn-comment-entry p{font:15px/1.9 Georgia,"Songti SC",serif;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}
+.trn-comment-empty{font:13px/1.8 var(--sans);color:var(--muted);padding:12px 0}
+#trn-comment-form{margin-top:27px}
+#trn-comment-form>label:first-child{display:block;margin-bottom:10px;font:600 12px var(--sans);color:var(--ink)}
+#trn-comment-body{box-sizing:border-box;width:100%;background:var(--paper);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:14px 17px;font:15px/1.8 Georgia,"Songti SC",serif;resize:vertical;min-height:130px}
+#trn-comment-body:focus{outline:2px solid var(--accent);outline-offset:2px}
+.trn-comment-actions{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:10px}
+.trn-comment-actions small{font:11px/1.6 var(--sans);color:var(--muted)}
+.trn-comment-actions button{background:var(--accent);color:white;border-color:transparent}
+.trn-honey{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+@media(max-width:550px){.trn-engagement-bar{gap:14px}.trn-engagement-actions{width:100%;margin-left:0}.trn-engagement-actions button{flex:1}.trn-comment-actions{align-items:flex-start;flex-direction:column}.trn-comment-actions button{align-self:flex-end}}
