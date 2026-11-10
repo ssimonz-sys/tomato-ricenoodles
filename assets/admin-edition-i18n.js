@@ -166,6 +166,22 @@
     '选择封面图片':'Choose a cover',
     '上传成功！':'Uploaded!',
     '正在准备图片…':'Preparing image…',
+    '新系列名称（例如：早期作品）':'New collection title (e.g. Early Works)',
+    '新书名称（单篇、多章的书都在这里创建）':'New book title (single-chapter and multi-chapter books use the same structure)',
+    '首次使用需要初始化系列目录，并导入已有的中英文系列。现有文章和书籍会保留。是否继续？':'Initialize the collection catalog? Existing posts and books will be preserved.',
+    '确定永久删除这篇文章吗？':'Permanently delete this post?',
+    '删除后将无法恢复，确定永久删除这篇文章吗？':'Permanently delete this post? This cannot be undone.',
+    '当前修改尚未保存，确定放弃修改吗？':'Discard unsaved changes?',
+    '发现未保存的本机写作副本，要恢复吗？':'An unsaved local draft was found. Restore it?',
+    '启用独立的阅读统计、点赞和匿名评论数据库？不会修改已有文章。':'Enable reads, likes, and comments? Existing posts will not change.',
+    '永久删除这条评论吗？':'Permanently delete this comment?',
+    '请先上传图片并通过图片网址插入，目前不支持直接粘贴图片文件。':'Please upload the image and insert its URL. Direct image pasting is unavailable.',
+    '将在当前光标位置插入示例标题结构。确定继续吗？':'Insert sample headings at the cursor?',
+    '为保护已有作品链接，此标识创建后固定':'This URL identifier stays fixed to protect existing links',
+    '编辑系列':'Edit collection',
+    '编辑书籍':'Edit book',
+    '编辑章节':'Edit chapter',
+    '已保存本机副本':'Local draft retained',
     '图片上传中…':'Uploading image…',
     '已压缩图片，正在上传…':'Compressed; uploading…'
   };
@@ -194,6 +210,13 @@
     [/（书籍草稿）/g,' (book draft)'],
     [/（章节草稿）/g,' (chapter draft)'],
     [/^目录读取失败：/g,'Catalog loading failed: '],
+    [/^删除系列「/g,'Delete collection “'],
+    [/^删除书籍「/g,'Delete book “'],
+    [/^删除章节「/g,'Delete chapter “'],
+    [/^确定永久删除文章「/g,'Permanently delete post “'],
+    [/^将「/g,'Move “'],
+    [/^此操作无法撤销。$/g,'This action cannot be undone.'],
+    [/^登录失败：/g,'Sign-in failed: '],
     [/^读取作品失败：/g,'Unable to load posts: '],
     [/^创建系列失败：/g,'Cannot create collection: '],
     [/^创建书籍失败：/g,'Cannot create book: '],
@@ -252,6 +275,13 @@
       }
     });
     observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+    // Localize native confirmation dialogs without altering their behavior.
+    // Only the English author pages load this module.
+    for(const method of ['alert','confirm','prompt']){
+      if(typeof window[method]!=='function')continue;
+      const original=window[method].bind(window);
+      window[method]=(message,...args)=>original(transform(String(message??'')),...args);
+    }
     window.TRNAdminTranslate={transform,inspect};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
