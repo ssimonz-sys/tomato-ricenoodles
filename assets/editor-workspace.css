@@ -1,0 +1,24 @@
+/* Full-width editor. Hierarchical content management is in /admin/manage/. */
+.desk-head-inner .desk-nav-link{margin-left:auto;color:var(--olive);text-decoration:none;font:600 12px var(--sans);white-space:nowrap}
+.desk-head-inner .desk-nav-link:hover{text-decoration:underline;text-underline-offset:4px}
+.desk-container{max-width:1780px}
+.desk-grid{display:block!important}
+.desk-grid>.edit-panel{width:100%;max-width:none}
+.studio-layout{grid-template-columns:minmax(0,1fr) minmax(190px,250px)}
+.studio-paper{padding-left:clamp(32px,6vw,125px);padding-right:clamp(30px,6vw,125px)}
+.studio-paper .toastui-editor-defaultUI{max-width:none}
+.desk-title{max-width:none}
+html[data-admin-theme="dark"] .desk-head-inner .desk-nav-link{color:#c3d8c4}
+@media(max-width:860px){
+ .desk-head-inner{gap:10px;padding:12px 16px;flex-wrap:wrap}
+ .desk-head-inner .desk-nav-link{margin-left:auto}
+ .desk-title{align-items:flex-start;flex-wrap:wrap}
+ .studio-layout{grid-template-columns:minmax(0,1fr)}
+ .studio-outline{position:static;max-height:230px;min-height:0;border-left:0;border-top:1px solid var(--border)}
+ .studio-paper{padding:34px clamp(18px,5vw,45px)}
+}
+@media(max-width:540px){
+ .desk-head-inner>span{display:none}
+ .desk-head-inner>a:first-child{font-size:17px}
+ .desk-head-inner .desk-nav-link{font-size:11px}
+}
