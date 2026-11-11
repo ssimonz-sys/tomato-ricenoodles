@@ -379,7 +379,7 @@
       const markdown = getMarkdown();
       panel.innerHTML = (window.marked && window.DOMPurify)
         ? (window.TRNReadingLayout?.render(markdown,window.marked,window.DOMPurify)??window.DOMPurify.sanitize(window.marked.parse(markdown,{gfm:true,breaks:true})))
-        : '<p>预览功能需要加载 Markdown 组件。</p>';
+        : '<p>阅读预览暂时无法加载。</p>';
       panel.hidden = false;
       richMount.hidden = true;
       textarea.hidden = true;
@@ -388,7 +388,7 @@
       panel.hidden = true;
       richMount.hidden = false;
       textarea.hidden=true;
-      $('#preview-toggle').textContent = '阅读全文预览';
+      $('#preview-toggle').textContent = '阅读预览';
     }
   }, true);
   // These compact commands are available in both full and focus editors.
