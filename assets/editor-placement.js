@@ -218,6 +218,24 @@
     });
     fillSeries();fillBook();fillChapter();
     return {refresh,load,getSelection,prepareSave,root,meta,hasLoaded:()=>loaded,
+      getDraftState(){
+        return {series_slug:s.value,book_id:b.value,chapter_id:c.value,
+          multiple_sections:multiToggle.checked,chapter_title:chapterTitle.value};
+      },
+      restoreDraftState(saved){
+        if(!saved||typeof saved!=='object')return;
+        const series=typeof saved.series_slug==='string'?saved.series_slug:'';
+        const bookId=typeof saved.book_id==='string'?saved.book_id:'';
+        const chapterId=typeof saved.chapter_id==='string'?saved.chapter_id:'auto';
+        fillSeries(series);
+        fillBook(bookId);
+        fillChapter(chapterId);
+        if(b.value&&c.value==='auto'&&saved.multiple_sections===true){
+          multiToggle.checked=true;
+          chapterTitle.value=String(saved.chapter_title||'').slice(0,200);
+        }
+        updateChapterFlow();
+      },
       markSaved(result){
         if(!result?.id)return;
         savedPostId=result.id;
