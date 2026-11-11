@@ -128,17 +128,36 @@ function renderStructure(){
 }
 function renderSeries(item){
   const seriesBooks=state.books.filter(b=>b.language===item.language&&b.series_slug===item.slug).sort(rank);
+  // Direct posts belong to the series without a book. Avoid duplicate chapter links.
+  const directPosts=state.posts.filter(p=>p.language===item.language&&
+    !sectionLink(p.id)&&Array.isArray(p.collection_slugs)&&p.collection_slugs.includes(item.slug))
+    .sort((a,b)=>String(b.published_at||b.updated_at||'').localeCompare(String(a.published_at||a.updated_at||'')));
+  const english=item.language==='en';
   const id=item.language+'::'+item.slug;
   const art=coverURL(item.art);
+  const summary=english
+    ?seriesBooks.length+' book'+(seriesBooks.length===1?'':'s')+' · '+directPosts.length+' post'+(directPosts.length===1?'':'s')
+    :seriesBooks.length+' 本书 · '+directPosts.length+' 篇文章';
+  const articleRows=directPosts.map(post=>
+    '<article class="manager-series-post"><div class="manager-series-post-text">'+
+      '<strong>'+esc(post.title)+'</strong>'+
+      '<small>'+(english?(post.status==='published'?'Published':'Draft'):(post.status==='published'?'已发布':'草稿'))+
+      (post.excerpt?' · '+esc(post.excerpt):'')+'</small>'+
+    '</div><div class="manager-actions">'+
+      '<a class="manager-mini" href="'+esc(writeLink(post.id,post.language))+'">'+(english?'Edit text':'编辑正文')+'</a>'+
+      '<a class="manager-mini" href="'+esc(writeLink(post.id,post.language))+'">'+(english?'Placement':'调整归属')+'</a>'+
+    '</div></article>').join('');
   return '<section class="manager-series-card">'+
     '<div class="manager-series-intro">'+
       (art?'<img class="manager-series-cover" src="'+esc(art)+'" loading="lazy" alt="">':'<div class="manager-series-placeholder" aria-hidden="true">✳</div>')+
-      '<div class="manager-series-copy"><span class="manager-kicker">'+(item.status==='published'?'已公开':'草稿')+' · '+esc(types[item.category]||'系列')+'</span>'+
-      '<h3>'+esc(item.title)+'</h3><p>'+esc(item.description||'暂无简介')+'</p>'+
-      '<span class="manager-hint">'+esc(item.slug)+' · '+seriesBooks.length+' 本书</span></div>'+
-      '<div class="manager-actions">'+button('book-new-in-series',id,'＋ 书')+button('series-edit',id,'编辑')+button('series-delete',id,'删除','danger')+'</div>'+
+      '<div class="manager-series-copy"><span class="manager-kicker">'+(english?(item.status==='published'?'Published':'Draft'):(item.status==='published'?'已公开':'草稿'))+' · '+(english?'Collection':esc(types[item.category]||'系列'))+'</span>'+
+      '<h3>'+esc(item.title)+'</h3><p>'+esc(item.description||(english?'No description':'暂无简介'))+'</p>'+
+      '<span class="manager-hint">'+esc(item.slug)+' · '+summary+'</span></div>'+
+      '<div class="manager-actions">'+button('book-new-in-series',id,english?'＋ Book':'＋ 书')+button('series-edit',id,english?'Edit':'编辑')+button('series-delete',id,english?'Delete':'删除','danger')+'</div>'+
     '</div>'+
-    (seriesBooks.length?'<div class="manager-books" data-book-list="'+esc(id)+'"><p class="manager-reorder-hint">拖动书名前的 ⠿ 调整顺序，松开后自动保存。</p>'+seriesBooks.map(b=>renderBook(b,true)).join('')+'</div>':'<p class="manager-subempty">这里还没有书籍，也可以先把系列建立起来。</p>')+
+    (seriesBooks.length?'<div class="manager-books" data-book-list="'+esc(id)+'"><p class="manager-reorder-hint">'+(english?'Drag ⠿ to reorder books. Changes are saved automatically.':'拖动书名前的 ⠿ 调整顺序，松开后自动保存。')+'</p>'+seriesBooks.map(b=>renderBook(b,true)).join('')+'</div>':'')+
+    (directPosts.length?'<div class="manager-series-posts"><h4>'+(english?'Posts directly in this collection':'直接收录的文章')+' <span>'+directPosts.length+'</span></h4>'+articleRows+'</div>':'')+
+    (!seriesBooks.length&&!directPosts.length?'<p class="manager-subempty">'+(english?'This collection has no books or posts yet.':'这个系列暂时没有书籍或文章。')+'</p>':'')+
   '</section>';
 }
 function renderBook(book,reorderable=false){
