@@ -20,6 +20,10 @@
   }
   function openNew(){
     if(!window.TRNDesk?.newPost){
+      if(window.TRNAdminBootError){
+        show((en?'Writing editor initialization error: ':'写作编辑器启动错误：')+window.TRNAdminBootError);
+        return;
+      }
       show(en?
         'The writing editor failed to start. Please reload the page. Your saved posts have not been changed.':
         '写作编辑器未能正常启动，请刷新页面。已有文章未被修改。');
