@@ -181,12 +181,10 @@
       moveSettings();
       switchTab('content');
       close();
-      const rich=$('#studio-rich-editor');
-      // Losing a third-party editor CDN must not reveal the full admin form.
-      const fallback=!rich?.classList.contains('is-ready');
-      form.classList.toggle('zen-textarea-fallback',fallback);
+      // Keep source Markdown hidden even when the optional visual editor fails.
+      form.classList.remove('zen-textarea-fallback');
       const textarea=$('#content-body');
-      if(textarea&&fallback)textarea.hidden=false;
+      if(textarea)textarea.hidden=true;
     }else{
       close();
       document.body.classList.remove('studio-focus-tools-visible');
