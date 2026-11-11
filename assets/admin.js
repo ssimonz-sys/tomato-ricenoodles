@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  try {
   const $ = s=>document.querySelector(s);
   const edition=window.TRNAdminSite?.lang||null;
   const editionWriter=lang=>'/admin/'+lang+'/';
@@ -443,4 +444,10 @@
     }
   }};
   check();
+  } catch (error) {
+    window.TRNAdminBootError = String(error?.message || error);
+    console.error('[Author Studio] Core initialization failed:',error);
+    const notice=document.querySelector('#editor-empty')||document.querySelector('#login-message');
+    if(notice)notice.textContent='写作后台初始化出错：'+window.TRNAdminBootError;
+  }
 })();
