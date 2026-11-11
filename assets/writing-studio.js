@@ -4,7 +4,16 @@
   const form = document.querySelector('#editor');
   if (!form) return;
   const $ = selector => document.querySelector(selector);
-  const field = name => form.elements[name];
+  // Keep stable references before moving fields into temporarily detached
+  // publishing and settings panels. form.elements only contains controls that
+  // are currently connected to this form. Without caching, moving .form-pair
+  // makes collection_slugs unavailable and aborts studio initialization while
+  // the language selector is still detached in publicationBar.
+  const originalFields = Object.create(null);
+  for (const control of form.querySelectorAll('[name]')) {
+    if (control.name && !originalFields[control.name]) originalFields[control.name] = control;
+  }
+  const field = name => originalFields[name] || form.elements.namedItem(name);
   const textarea = $('#content-body');
   let rich = null;
   let loading = false;
