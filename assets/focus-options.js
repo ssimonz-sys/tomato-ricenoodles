@@ -1,209 +1,188 @@
-/* Matters-inspired focus workspace.
-   Reuses the SAME form fields, cover uploader, metadata, and cloud save flow.
-   No duplicated inputs, independent drafts, database changes, or hidden content edits. */
+/* Distraction-free writer for Chinese and English editions.
+   Works with the full Toast UI studio and with the original textarea fallback.
+   Reuses the existing form fields and server-side save workflow. */
 (() => {
   'use strict';
   const form=document.querySelector('#editor');
-  const panel=document.querySelector('#studio-settings');
-  const topbar=form?.querySelector('.form-top');
-  const actions=topbar?.querySelector('.studio-top-actions');
-  if(!form||!panel||!actions||!window.TRNFocus?.subscribe)return;
+  const top=form?.querySelector('.form-top');
+  if(!form||!top||!window.TRNFocus?.subscribe)return;
+
   const en=window.TRNAdminSite?.lang==='en';
-  const text=(zh,enText)=>en?enText:zh;
-  const get=s=>document.querySelector(s);
-  const original=[];
-  let active=false;
-  let tab='content';
+  const txt=(zh,english)=>en?english:zh;
+  const $=selector=>document.querySelector(selector);
+  const moved=[];
+  let focused=false,tab='content';
 
-  const make=(tag,className,content)=>{
-    const element=document.createElement(tag);
-    if(className)element.className=className;
-    if(content!==undefined)element.textContent=content;
-    return element;
+  const create=(tag,className='',label)=>{
+    const el=document.createElement(tag);
+    if(className)el.className=className;
+    if(label!==undefined)el.textContent=label;
+    return el;
   };
-  const optionsButton=make('button','zen-options-toggle',text('选项','Options'));
-  optionsButton.id='zen-options-toggle';
-  optionsButton.type='button';
-  optionsButton.setAttribute('aria-controls','studio-settings');
-  optionsButton.setAttribute('aria-expanded','false');
-  const exitButton=make('button','zen-exit-focus',text('退出专注','Exit focus'));
-  exitButton.id='zen-exit-focus';
-  exitButton.type='button';
-  const saveButtons=actions.querySelector('.editor-buttons');
-  if(saveButtons)actions.insertBefore(optionsButton,saveButtons);
-  else actions.append(optionsButton);
-  actions.append(exitButton);
-
-  const head=panel.querySelector('.studio-settings-head');
-  const name=head?.querySelector('strong');
-  const description=head?.querySelector('p');
-  const collapse=head?.querySelector('#studio-settings-close');
-  const oldTitle=name?.textContent;
-  const oldDescription=description?.textContent;
-  const oldCollapse=collapse?.textContent;
-
-  const tabs=make('div','zen-tabs');
-  tabs.setAttribute('role','tablist');
-  tabs.setAttribute('aria-label',text('选项分类','Options categories'));
-  const contentTab=make('button','zen-tab',text('内容与排版','Content & Layout'));
-  contentTab.type='button';contentTab.id='zen-tab-content';
-  contentTab.setAttribute('role','tab');
-  contentTab.setAttribute('aria-controls','zen-content-pane');
-  const workTab=make('button','zen-tab',text('作品设置','Post Settings'));
-  workTab.type='button';workTab.id='zen-tab-work';
-  workTab.setAttribute('role','tab');
-  workTab.setAttribute('aria-controls','zen-work-pane');
-  tabs.append(contentTab,workTab);
-
-  const contentPane=make('section','zen-tab-pane');
-  contentPane.id='zen-content-pane';
-  contentPane.setAttribute('role','tabpanel');
-  contentPane.setAttribute('aria-labelledby',contentTab.id);
-  const workPane=make('section','zen-tab-pane');
-  workPane.id='zen-work-pane';
-  workPane.setAttribute('role','tabpanel');
-  workPane.setAttribute('aria-labelledby',workTab.id);
-  panel.append(tabs,contentPane,workPane);
-
-  const tagsGroup=make('section','studio-settings-group zen-card');
-  const tagsHeading=make('h3','',text('添加标签','Tags'));
-  tagsGroup.append(tagsHeading);
-  const layoutGroup=make('section','studio-settings-group zen-card');
-  layoutGroup.append(make('h3','',text('内容与排版','Layout')));
-  const layoutDesc=make('p','zen-card-desc',text(
-    '正文采用宽敞行距。需要标题、对齐或缩进时，可以临时展开排版工具。',
-    'Write with generous spacing. Show formatting tools when you need headings, alignment or indentation.'));
-  const formatButton=make('button','zen-format-toggle',text('显示排版工具','Show formatting tools'));
-  formatButton.type='button';
-  formatButton.setAttribute('aria-pressed','false');
-  layoutGroup.append(layoutDesc,formatButton);
-
-  // Placeholder comments remember the exact original DOM positions.
-  // Moving nodes inside the same <form> does not change their inputs/values.
-  function move(element,destination){
-    if(!element||!destination)return;
-    const found=original.find(x=>x.element===element);
-    if(!found){
-      const marker=document.createComment('focus-options-original-position');
-      element.parentNode?.insertBefore(marker,element);
-      original.push({element,marker});
+  function place(el,target){
+    if(!el||!target||el.parentNode===target)return;
+    if(!moved.some(entry=>entry.el===el)){
+      const marker=document.createComment('zen-original-location');
+      el.parentNode?.insertBefore(marker,el);
+      moved.push({el,marker});
     }
-    destination.append(element);
+    target.append(el);
   }
   function restore(){
-    for(const {element,marker} of [...original].reverse()){
-      if(marker.parentNode){
-        marker.parentNode.insertBefore(element,marker);
-        marker.remove();
+    for(const entry of [...moved].reverse()){
+      if(entry.marker.parentNode){
+        entry.marker.parentNode.insertBefore(entry.el,entry.marker);
+        entry.marker.remove();
       }
     }
-    original.length=0;
+    moved.length=0;
   }
-  function collect(){
-    const groups=[...panel.querySelectorAll(':scope > .studio-settings-group')];
-    const category=groups.find(g=>g.querySelector('[name="type"]'));
-    const cover=groups.find(g=>g.querySelector('[name="cover_url"]'));
-    const tags=form.querySelector('.form-pair');
-    if(tags&&tags.parentNode!==tagsGroup)move(tags,tagsGroup);
-    if(category&&category.parentNode!==workPane)move(category,workPane);
-    if(cover&&cover.parentNode!==contentPane)move(cover,contentPane);
-    if(tagsGroup.parentNode!==contentPane)contentPane.append(tagsGroup);
-    if(layoutGroup.parentNode!==contentPane)contentPane.append(layoutGroup);
-    const placement=get('#studio-placement');
-    if(placement&&placement.parentNode!==contentPane)move(placement,contentPane);
-    const publish=get('#studio-publication-bar');
-    if(publish&&publish.parentNode!==workPane)move(publish,workPane);
-  }
-  function showTab(next){
-    tab=next==='work'?'work':'content';
-    contentPane.hidden=tab!=='content';
-    workPane.hidden=tab!=='work';
-    for(const [button,selected] of [[contentTab,tab==='content'],[workTab,tab==='work']]){
-      button.setAttribute('aria-selected',String(selected));
-      button.tabIndex=selected?0:-1;
-    }
-    if(active)collect();
-  }
-  contentTab.addEventListener('click',()=>showTab('content'));
-  workTab.addEventListener('click',()=>showTab('work'));
-  tabs.addEventListener('keydown',event=>{
-    if(!['ArrowRight','ArrowLeft'].includes(event.key))return;
-    event.preventDefault();
-    const to=tab==='content'?'work':'content';
-    showTab(to);
-    (to==='content'?contentTab:workTab).focus();
-  });
+  const toolbar=create('div','zen-header-actions');
+  toolbar.id='zen-header-actions';
+  const optionBtn=create('button','zen-action zen-option',txt('选项','Options'));
+  optionBtn.id='zen-option-button';optionBtn.type='button';
+  optionBtn.setAttribute('aria-expanded','false');
+  optionBtn.setAttribute('aria-controls','zen-settings');
+  const exitBtn=create('button','zen-action zen-exit',txt('退出专注','Exit focus'));
+  exitBtn.type='button';
+  const buttonSlot=create('div','zen-save-slot');
+  toolbar.append(optionBtn,buttonSlot,exitBtn);
+  top.append(toolbar);
 
+  const sidebar=create('aside','zen-settings');
+  sidebar.id='zen-settings';
+  sidebar.setAttribute('aria-label',txt('写作选项','Writing options'));
+  sidebar.setAttribute('aria-hidden','true');
+  const header=create('div','zen-settings-header');
+  header.append(create('h2','',txt('选项','Options')));
+  const closeBtn=create('button','zen-collapse',txt('收起 ›','Collapse ›'));
+  closeBtn.type='button';
+  header.append(closeBtn);
+  const tabs=create('div','zen-tabs');
+  tabs.setAttribute('role','tablist');
+  const contentBtn=create('button','zen-tab',txt('内容与排版','Content & Layout'));
+  const workBtn=create('button','zen-tab',txt('作品设置','Post Settings'));
+  contentBtn.type='button';workBtn.type='button';
+  contentBtn.id='zen-tab-content';workBtn.id='zen-tab-work';
+  contentBtn.setAttribute('role','tab');workBtn.setAttribute('role','tab');
+  const content=create('div','zen-tab-pane');content.id='zen-content';
+  const work=create('div','zen-tab-pane');work.id='zen-work';
+  content.setAttribute('role','tabpanel');work.setAttribute('role','tabpanel');
+  contentBtn.setAttribute('aria-controls',content.id);
+  workBtn.setAttribute('aria-controls',work.id);
+  tabs.append(contentBtn,workBtn);
+  sidebar.append(header,tabs,content,work);
+  form.append(sidebar);
+
+  const card=(name,destination)=>{
+    const c=create('section','zen-card');
+    c.append(create('h3','',name));
+    destination.append(c);
+    return c;
+  };
+  const coverCard=card(txt('选择封面','Cover image'),content);
+  const tagsCard=card(txt('添加标签','Tags'),content);
+  const collectionCard=card(txt('加入系列或书籍','Collection & book'),content);
+  const layoutCard=card(txt('内容与排版','Layout'),content);
+  layoutCard.append(create('p','zen-help',txt(
+    '正文默认为宽松排版。需要修改标题或对齐方式时，可以临时显示工具栏。',
+    'The editor uses spacious typography. Reveal formatting tools to change headings or alignment.'
+  )));
+  const formatBtn=create('button','zen-format-button',txt('显示排版工具','Show formatting tools'));
+  formatBtn.type='button';layoutCard.append(formatBtn);
+
+  const publishCard=card(txt('发布状态','Publication'),work);
+  const detailsCard=card(txt('文章信息','Post information'),work);
+
+  function fieldLabel(name){
+    const field=form.elements.namedItem(name);
+    return field?.closest('label')||null;
+  }
+  function moveSettings(){
+    // This resolves both versions of the editor: full studio and raw form.
+    place(fieldLabel('cover_url'),coverCard);
+    const tags=form.querySelector('.form-pair');
+    if(tags)place(tags,tagsCard);
+    place($('#studio-placement'),collectionCard);
+    const publication=$('#studio-publication-bar');
+    if(publication){
+      place(publication,publishCard);
+    }else{
+      place(form.querySelector('.publishing-controls'),publishCard);
+      place(form.querySelector('.publish-feedback'),publishCard);
+      place($('#editor-message'),publishCard);
+    }
+    place(fieldLabel('type'),detailsCard);
+    place(fieldLabel('slug'),detailsCard);
+    // Use the single existing Save / Publish button; move, never clone.
+    place(form.querySelector('.editor-buttons'),buttonSlot);
+  }
+  function switchTab(which){
+    tab=which==='work'?'work':'content';
+    content.hidden=tab!=='content';
+    work.hidden=tab!=='work';
+    contentBtn.setAttribute('aria-selected',String(tab==='content'));
+    workBtn.setAttribute('aria-selected',String(tab==='work'));
+    contentBtn.tabIndex=tab==='content'?0:-1;
+    workBtn.tabIndex=tab==='work'?0:-1;
+  }
   function close(){
-    panel.classList.remove('open');
-    panel.setAttribute('aria-hidden','true');
-    document.body.classList.remove('studio-panel-open','zen-options-open');
-    const backdrop=get('.studio-backdrop');
-    if(backdrop)backdrop.hidden=true;
-    optionsButton.setAttribute('aria-expanded','false');
+    sidebar.classList.remove('open');
+    document.body.classList.remove('zen-options-open');
+    sidebar.setAttribute('aria-hidden','true');
+    optionBtn.setAttribute('aria-expanded','false');
   }
   function open(){
-    if(!active)return;
-    collect();
-    panel.classList.add('open');
-    panel.setAttribute('aria-hidden','false');
+    if(!focused)return;
+    moveSettings();
+    sidebar.classList.add('open');
     document.body.classList.add('zen-options-open');
-    document.body.classList.remove('studio-panel-open');
-    const backdrop=get('.studio-backdrop');
-    if(backdrop)backdrop.hidden=true;
-    optionsButton.setAttribute('aria-expanded','true');
-    showTab(tab);
+    sidebar.setAttribute('aria-hidden','false');
+    optionBtn.setAttribute('aria-expanded','true');
+    switchTab(tab);
   }
-  optionsButton.addEventListener('click',()=>panel.classList.contains('open')?close():open());
-  exitButton.addEventListener('click',()=>window.TRNFocus.set(false));
-  collapse?.addEventListener('click',()=>{
-    if(active)close(); // Standard studio's existing close handler also runs.
+  optionBtn.addEventListener('click',()=>sidebar.classList.contains('open')?close():open());
+  closeBtn.addEventListener('click',()=>{close();optionBtn.focus();});
+  exitBtn.addEventListener('click',()=>window.TRNFocus.set(false));
+  contentBtn.addEventListener('click',()=>switchTab('content'));
+  workBtn.addEventListener('click',()=>switchTab('work'));
+  tabs.addEventListener('keydown',event=>{
+    if(event.key!=='ArrowRight'&&event.key!=='ArrowLeft')return;
+    event.preventDefault();
+    switchTab(tab==='content'?'work':'content');
+    (tab==='content'?contentBtn:workBtn).focus();
   });
-  document.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&active&&panel.classList.contains('open')){
-      event.preventDefault();
-      event.stopImmediatePropagation();
+  formatBtn.addEventListener('click',()=>{
+    const showing=document.body.classList.toggle('studio-focus-tools-visible');
+    formatBtn.textContent=showing?txt('收起排版工具','Hide formatting tools'):txt('显示排版工具','Show formatting tools');
+    formatBtn.setAttribute('aria-pressed',String(showing));
+  });
+
+  function update(active){
+    focused=!!active;
+    // The old stacked focus styles conflicted with this clean page.
+    // One class now owns its layout, so the raw textarea also has a fallback.
+    document.body.classList.remove('studio-focus-mode');
+    document.body.classList.toggle('zen-paper-mode',focused);
+    toolbar.hidden=!focused;
+    sidebar.hidden=!focused;
+    if(focused){
+      moveSettings();
+      switchTab('content');
       close();
-      optionsButton.focus();
-    }
-  },true);
-
-  function updateFormatButton(){
-    const on=document.body.classList.contains('studio-focus-tools-visible');
-    formatButton.textContent=on?text('收起排版工具','Hide formatting tools'):text('显示排版工具','Show formatting tools');
-    formatButton.setAttribute('aria-pressed',String(on));
-  }
-  formatButton.addEventListener('click',()=>{
-    document.body.classList.toggle('studio-focus-tools-visible');
-    updateFormatButton();
-  });
-
-  function onFocusChange(next){
-    active=!!next;
-    document.body.classList.toggle('zen-writing-mode',active);
-    optionsButton.hidden=!active;
-    exitButton.hidden=!active;
-    if(active){
-      collect();
-      if(name)name.textContent=text('选项','Options');
-      if(description)description.textContent='';
-      if(collapse){
-        collapse.textContent=text('收起 ›','Collapse ›');
-        collapse.setAttribute('aria-label',text('收起选项','Collapse options'));
-      }
-      showTab('content');
-      updateFormatButton();
+      const rich=$('#studio-rich-editor');
+      // Losing a third-party editor CDN must not reveal the full admin form.
+      const fallback=!rich?.classList.contains('is-ready');
+      form.classList.toggle('zen-textarea-fallback',fallback);
+      const textarea=$('#content-body');
+      if(textarea&&fallback)textarea.hidden=false;
     }else{
       close();
+      document.body.classList.remove('studio-focus-tools-visible');
+      form.classList.remove('zen-textarea-fallback');
       restore();
-      if(name)name.textContent=oldTitle;
-      if(description)description.textContent=oldDescription;
-      if(collapse){
-        collapse.textContent=oldCollapse;
-        collapse.setAttribute('aria-label',text('关闭设置','Close settings'));
-      }
     }
   }
-  window.TRNFocus.subscribe(onFocusChange);
-  window.TRNZenOptions={open,close,selectTab:showTab,isOpen:()=>active&&panel.classList.contains('open')};
+  window.TRNFocus.subscribe(update);
+  window.TRNZenOptions={open,close,selectTab:switchTab,isOpen:()=>focused&&sidebar.classList.contains('open')};
 })();
