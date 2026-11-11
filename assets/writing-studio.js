@@ -57,6 +57,11 @@
   backdrop.className = 'studio-backdrop';
   backdrop.hidden = true;
   const topbar = form.querySelector('.form-top');
+  // Mount destinations first. Moving controls between CONNECTED descendants
+  // keeps them in form.elements throughout startup, even if a later step fails.
+  layout.append(paper, outline);
+  topbar.after(layout);
+  form.append(backdrop, settings);
 
   function addSettingsGroup(label, elements) {
     const section = document.createElement('section');
@@ -74,6 +79,7 @@
   publicationBar.className='studio-publication-bar';
   publicationBar.setAttribute('aria-label','发布与归档');
   publicationBar.innerHTML='<div class="studio-publication-head"><strong>发布与归档</strong><span>选择语言和公开状态，然后把作品收进系列或书籍</span></div>';
+  paper.append(publicationBar);
   const publishingControls=form.querySelector('.publishing-controls');
   publicationBar.append(publishingControls);
   addSettingsGroup('分类与专题', [field('type').closest('label'),form.querySelector('.form-pair')]);
@@ -102,9 +108,6 @@
     editorMessage.setAttribute('role','status');
     publicationBar.append(editorMessage);
   }
-  layout.append(paper, outline);
-  topbar.after(layout);
-  form.append(backdrop, settings);
 
   const actions = document.createElement('div');
   actions.className = 'studio-top-actions';
