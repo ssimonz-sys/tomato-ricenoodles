@@ -14,18 +14,56 @@
       '<label>书籍<select id="place-book" aria-label="选择所属书籍"><option value="">不选择书籍</option></select></label>'+
       '<label>章节<select id="place-chapter" aria-label="选择所属章节" disabled><option value="">无需选择章节</option></select></label>'+
       '</div>'+
+      '<div class="studio-chapter-flow" id="place-chapter-flow" hidden>'+
+      '<label class="studio-multi-toggle" id="place-multi-row"><input type="checkbox" id="place-multi-sections">本章包含多个小节</label>'+
+      '<label class="studio-chapter-title-row" id="place-chapter-title-row" hidden>章标题<input type="text" id="place-chapter-title" maxlength="200" placeholder="例如：（2）家庭不是利益共同体"></label>'+
+      '<p id="place-chapter-note" class="studio-chapter-note"></p>'+
+      '<a id="place-next-section" class="studio-next-section" hidden>＋ 添加下一节</a>'+
+      '</div>'+
       '<div class="studio-placement-footer"><p id="place-hint">独立文章会直接显示在所选语言站点。</p>'+
       '<div class="studio-placement-actions"><button type="button" id="place-add-series">＋新建系列</button><button type="button" id="place-add-book">＋新建书籍</button><button type="button" id="place-refresh">↻刷新目录</button><a href="'+(window.TRNAdminSite?.manager||'/admin/manage/')+'" target="_blank" rel="noopener">完整管理</a></div></div>';
     const target=form.querySelector('#studio-publication-bar')||form.querySelector('.body-top');
     target.after(root);
     const s=root.querySelector('#place-series'),b=root.querySelector('#place-book'),c=root.querySelector('#place-chapter');
     const hint=root.querySelector('#place-hint');
+    const chapterFlow=root.querySelector('#place-chapter-flow');
+    const multiRow=root.querySelector('#place-multi-row');
+    const multiToggle=root.querySelector('#place-multi-sections');
+    const chapterTitleRow=root.querySelector('#place-chapter-title-row');
+    const chapterTitle=root.querySelector('#place-chapter-title');
+    const chapterNote=root.querySelector('#place-chapter-note');
+    const nextSection=root.querySelector('#place-next-section');
+    let savedPostId='',savedChapterId='';
     const meta={enabled:false,seriesEnabled:false,series:[],books:[],chapters:[],links:[]};
     let loaded=false;
     const language=()=>form.elements.language.value;
     const published=()=>form.elements.status.value==='published';
     const fields=(options,selected='')=>options.map(([value,title])=>'<option value="'+esc(value)+'"'+(value===selected?' selected':'')+'>'+esc(title)+'</option>').join('');
     const fallbackSeries=()=>window.TRN?.collections?.[language()]||[];
+    function updateChapterFlow(){
+      const hasBook=!!b.value;
+      const newChapter=hasBook&&c.value==='auto';
+      chapterFlow.hidden=!hasBook;
+      multiRow.hidden=!newChapter;
+      // Switching to an existing chapter disables the new-chapter title.
+      if(!newChapter){multiToggle.checked=false;chapterTitle.value='';}
+      const needsTitle=newChapter&&multiToggle.checked;
+      chapterTitleRow.hidden=!needsTitle;
+      chapterTitle.disabled=!needsTitle;
+      if(needsTitle){
+        chapterNote.textContent='文章标题就是第一节标题；保存时会自动创建上面填写的章。';
+      }else if(newChapter){
+        chapterNote.textContent='默认使用文章标题创建单节章节，之后也可以继续添加小节。';
+      }else{
+        chapterNote.textContent='当前文章将作为所选章节的一节保存。';
+      }
+      const ready=!!savedPostId&&!!savedChapterId&&c.value===savedChapterId;
+      nextSection.hidden=!ready;
+      if(ready){
+        const writer=window.TRNAdminSite?.writer||'/admin/'+language()+'/';
+        nextSection.href=writer+'?new=1&chapter='+encodeURIComponent(savedChapterId);
+      }else nextSection.removeAttribute('href');
+    }
     function fillSeries(value=''){
       // Include existing DB collections and the site's configured collections.
       // A missing configured collection is created only when the author saves
@@ -54,6 +92,7 @@
         c.disabled=false;
       }
       updateHint();
+      updateChapterFlow();
     }
     function updateHint(){
       if(b.value){
@@ -83,6 +122,10 @@
     }
     function load(post,{pendingChapter=null,pendingBook=null}={}){
       const link=meta.links.find(row=>row.post_id===post?.id);
+      savedPostId=post?.id||'';
+      savedChapterId=link?.chapter_id||'';
+      multiToggle.checked=false;
+      chapterTitle.value='';
       const chapter=meta.chapters.find(row=>row.id===(pendingChapter||link?.chapter_id));
       const linkedBook=meta.books.find(row=>row.id===chapter?.book_id);
       const requestedBook=meta.books.find(row=>row.id===pendingBook&&row.language===language());
@@ -124,12 +167,15 @@
         mode:book?'book':s.value?'series':'independent',
         series_slug:book?book.series_slug||'':s.value,
         book_id:book?.id||'',
-        chapter_id:book?c.value:''
+        chapter_id:book?c.value:'',
+        multiple_sections:!!book&&c.value==='auto'&&multiToggle.checked,
+        chapter_title:book&&c.value==='auto'&&multiToggle.checked?chapterTitle.value.trim():''
       };
     }
     s.addEventListener('change',()=>{fillBook();fillChapter();});
     b.addEventListener('change',()=>fillChapter());
-    c.addEventListener('change',updateHint);
+    c.addEventListener('change',()=>{updateHint();updateChapterFlow();});
+    multiToggle.addEventListener('change',()=>{updateChapterFlow();updateHint();});
     form.elements.language.addEventListener('change',()=>{fillSeries();fillBook();fillChapter();});
     form.elements.status.addEventListener('change',updateHint);
     root.querySelector('#place-refresh').addEventListener('click',async()=>{await refresh();hint.textContent='目录已刷新。';});
@@ -171,7 +217,14 @@
       }catch(e){alert('创建书籍失败：'+e.message);}
     });
     fillSeries();fillBook();fillChapter();
-    return {refresh,load,getSelection,prepareSave,root,meta,hasLoaded:()=>loaded,chooseBook(id){
+    return {refresh,load,getSelection,prepareSave,root,meta,hasLoaded:()=>loaded,
+      markSaved(result){
+        if(!result?.id)return;
+        savedPostId=result.id;
+        savedChapterId=result.placement?.chapter_id||'';
+        updateChapterFlow();
+      },
+      chooseBook(id){
       const item=meta.books.find(x=>x.id===id&&x.language===language());
       if(!item)return false;
       fillSeries(item.series_slug||'');fillBook(item.id);fillChapter('auto');
