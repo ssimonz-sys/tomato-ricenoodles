@@ -34,6 +34,13 @@ export async function onRequestPost(context){
   if(mode==='independent'&&selectedSeries)return error('独立文章不能同时指定系列。',400);
   const bookId=name(input.placement?.book_id||'');
   const chapterId=name(input.placement?.chapter_id||'');
+  const multipleSections=input.placement?.multiple_sections===true;
+  const chapterTitleInput=input.placement?.chapter_title;
+  const chapterTitle=typeof chapterTitleInput==='string'?chapterTitleInput.trim():'';
+  if(chapterTitleInput!==undefined&&typeof chapterTitleInput!=='string')return error('章标题格式无效。',400);
+  if(chapterTitle.length>200)return error('章标题不能超过200个字符。',400);
+  if(multipleSections&&(!chapterTitle||mode!=='book'||(chapterId&&chapterId!=='auto')))
+    return error('请选择新章节，并填写多节章节的章标题。',400);
   if(mode==='book'&&!validId(bookId))return error('请先选择所属书籍。',400);
   if(mode!=='book'&&(bookId||chapterId))return error('请重新选择书籍和章节。',400);
   if(chapterId&&chapterId!=='auto'&&!validId(chapterId))return error('章节编号无效。',400);
@@ -97,7 +104,7 @@ export async function onRequestPost(context){
   }
   if(mode==='book'&&newChapterId){
     steps.push(db.prepare('INSERT INTO trn_chapters(id,book_id,title,description,status,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
-      .bind(newChapterId,bookId,p.title,'',p.status==='published'?'published':'draft',0,now,now));
+      .bind(newChapterId,bookId,multipleSections?chapterTitle:p.title,'',p.status==='published'?'published':'draft',0,now,now));
   }
   if(hasHierarchy){
     if(mode==='book'){
