@@ -200,6 +200,8 @@
     if(p?.mode==='book'&&!p.book_id)throw Error('请先选择所属书籍。');
     if(p?.multiple_sections&&!p.chapter_title?.trim())throw Error('请填写多节章节的章标题。');
     if(p?.multiple_sections&&p.chapter_title.length>200)throw Error('章标题不能超过200个字符。');
+    if(!window.TRNStudio?.validateContent)throw Error('所见即所得编辑器未能启动，请刷新页面后再保存。');
+    window.TRNStudio.validateContent();
     return true;
   }
   function makeWorkflow(value,publishParents=false){
@@ -296,10 +298,10 @@
     catch(error){
       console.error('Rich editor failed during document load',error);
       editorField('body').value=p?.body||'';
-      $('#content-body').hidden=false;
+      $('#content-body').hidden=true;
       const mount=document.querySelector('#studio-rich-editor');
       if(mount)mount.hidden=true;
-      message('#editor-message','正文编辑器加载失败，已保留普通文本编辑模式：'+error.message);
+      message('#editor-message','可视化正文编辑器加载失败，请刷新页面。为防止误覆盖文章，保存功能暂不可用：'+error.message);
     }
     try{placement?.load(p,{pendingChapter,pendingBook});}
     catch(error){
