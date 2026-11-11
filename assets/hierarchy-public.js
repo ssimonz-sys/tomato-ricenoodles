@@ -29,6 +29,21 @@ function bookCard(b){
  const cover=/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp|gif)$/i.test(b.cover_url||'')||/^\/media\/covers\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/i.test(b.cover_url||'')||/^https:\/\/[^\s<>"']+$/i.test(b.cover_url||'')?b.cover_url:art||'/assets/graphics/'+(zh?'zh-basic-humanities.svg':'en-basic-human-science.svg');
  return '<a class="hier-book-card" href="'+bookUrl(b.id)+'"><img src="'+esc(cover)+'" alt="" loading="lazy"><span><strong>'+esc(b.title)+'</strong><small>'+esc(b.description||'')+'</small><em>'+chapterCount+' '+(zh?'章':'chapters')+' ↗</em></span></a>';
 }
+function chapterEntry(ch,i){
+ const secs=sectionFor(ch.id);
+ const label=zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1);
+ const summary='<span class="hier-chapter-index">'+esc(label)+'</span><span class="hier-chapter-copy"><strong>'+esc(ch.title)+'</strong>'+(ch.description?'<small>'+esc(ch.description)+'</small>':'')+'</span>';
+ const chapterId='chapter-'+encodeURIComponent(ch.id);
+ if(secs.length===1){
+   // Single-section chapters go straight to the actual article.
+   return '<section class="hier-chapter-entry" id="'+chapterId+'"><a class="hier-chapter-parent" href="'+postUrl(secs[0].slug)+'">'+summary+'<span class="hier-chapter-tail" aria-hidden="true">↗</span></a></section>';
+ }
+ if(!secs.length){
+   return '<section class="hier-chapter-entry" id="'+chapterId+'"><div class="hier-chapter-parent hier-chapter-unavailable">'+summary+'<span class="hier-chapter-count">'+(zh?'暂无公开小节':'No published sections')+'</span></div></section>';
+ }
+ const panelId='hier-chapter-sections-'+i;
+ return '<section class="hier-chapter-entry" id="'+chapterId+'"><button class="hier-chapter-parent hier-chapter-toggle" type="button" aria-expanded="false" aria-controls="'+panelId+'">'+summary+'<span class="hier-chapter-count">'+secs.length+' '+(zh?'节':'sections')+'</span><span class="hier-chapter-tail hier-chapter-chevron" aria-hidden="true">⌄</span></button><div class="hier-chapter-children" id="'+panelId+'" hidden>'+secs.map(sectionItem).join('')+'</div></section>';
+}
 function showBook(){
  const root=$('#hier-public-root'), book=bookBy(q.get('id'));
  if(!root)return;
@@ -40,11 +55,16 @@ function showBook(){
  if(series)trail.push([series.title,seriesUrl(series.slug)]);
  trail.push([book.title,null]);
  const chapters=content.chapters.filter(ch=>ch.book_id===book.id);
- const chapterLink=ch=>{
-   const entries=sectionFor(ch.id);
-   return entries.length===1?postUrl(entries[0].slug):chapterUrl(ch.id);
- };
- root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list">'+(chapters.length?chapters.map((ch,i)=>'<section class="hier-chapter-block"><div class="hier-chapter-heading"><a href="'+chapterLink(ch)+'"><small>'+(zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1))+'</small><h3>'+esc(ch.title)+'</h3><p>'+esc(ch.description||'')+'</p></a></div><div>'+(sectionFor(ch.id).length===1?'':sectionFor(ch.id).map(sectionItem).join(''))+'</div></section>').join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
+ root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list" class="hier-chapter-stack">'+(chapters.length?chapters.map(chapterEntry).join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
+ root.querySelectorAll('.hier-chapter-toggle').forEach(button=>{
+   button.addEventListener('click',()=>{
+     const panel=d.getElementById(button.getAttribute('aria-controls'));
+     if(!panel)return;
+     const expanding=button.getAttribute('aria-expanded')!=='true';
+     button.setAttribute('aria-expanded',String(expanding));
+     panel.hidden=!expanding;
+   });
+ });
 }
 function showChapter(){
  const root=$('#hier-public-root'),ch=chapterBy(q.get('id'));
@@ -54,6 +74,11 @@ function showChapter(){
  if(!book){root.textContent=zh?'书籍尚未公开。':'The book is not published.';return;}
  title(ch.title);
  const secs=sectionFor(ch.id);
+ // Redirect existing one-section chapter bookmarks directly to the post.
+ if(secs.length===1 && secs[0].slug){
+   location.replace(postUrl(secs[0].slug));
+   return;
+ }
  const serie=seriesFor(book.series_slug);
  const trail=[[zh?'系列文集':'Collections',route('collections.html')]];
  if(serie)trail.push([serie.title,seriesUrl(serie.slug)]);
@@ -93,9 +118,12 @@ function decorateSection(){
  if(!section)return;
  const chapter=chapterBy(section.chapter_id),book=chapter?bookBy(chapter.book_id):null;
  if(!chapter||!book)return;
- const trail=[[book.title,bookUrl(book.id)],[chapter.title,chapterUrl(chapter.id)],[section.title,null]];
- const nav=d.createElement('div');nav.className='hier-read-nav';
  const siblings=sectionFor(chapter.id);
+ // Single-section chapters should not repeat the section title in breadcrumbs.
+ const trail=[[book.title,bookUrl(book.id)]];
+ if(siblings.length>1)trail.push([chapter.title,bookUrl(book.id)+'#chapter-'+encodeURIComponent(chapter.id)]);
+ trail.push([section.title,null]);
+ const nav=d.createElement('div');nav.className='hier-read-nav';
  const ix=siblings.findIndex(s=>s.post_id===section.post_id);
  const previous=siblings[ix-1],next=siblings[ix+1];
  nav.innerHTML=breadcrumb(trail)+'<div class="hier-read-neighbors">'+(previous?'<a href="'+postUrl(previous.slug)+'">← '+esc(previous.title)+'</a>':'<span></span>')+(next?'<a href="'+postUrl(next.slug)+'">'+esc(next.title)+' →</a>':'<span></span>')+'</div>';
