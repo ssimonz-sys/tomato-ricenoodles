@@ -317,3 +317,12 @@ html[data-admin-theme="dark"] #editor .zen-format-item:hover{
   body.zen-paper-mode #editor #zen-quick-format{margin:18px 0 7px!important}
   #editor .zen-format-item{width:30px;height:30px}
 }
+
+/* The writing interface is WYSIWYG only. Raw Markdown is an internal save buffer. */
+#editor #content-body,
+#editor #content-body[hidden],
+body.zen-paper-mode #editor.zen-textarea-fallback #content-body{display:none!important}
+#studio-rich-editor .toastui-editor-mode-switch,
+#studio-rich-editor .toastui-editor-md-container,
+#studio-rich-editor .toastui-editor-md-preview{display:none!important}
+body.zen-paper-mode.studio-focus-tools-visible #studio-rich-editor .toastui-editor-mode-switch{display:none!important}
