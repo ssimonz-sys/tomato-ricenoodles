@@ -194,6 +194,8 @@
     const p=placement?.getSelection();
     if(p?.mode==='book'&&!p.chapter_id)throw Error('请选择将文章作为新章节，或收入现有章节。');
     if(p?.mode==='book'&&!p.book_id)throw Error('请先选择所属书籍。');
+    if(p?.multiple_sections&&!p.chapter_title?.trim())throw Error('请填写多节章节的章标题。');
+    if(p?.multiple_sections&&p.chapter_title.length>200)throw Error('章标题不能超过200个字符。');
     return true;
   }
   function makeWorkflow(value,publishParents=false){
@@ -249,6 +251,7 @@
           await placement.refresh();
           placement.load({...updated,id:result.id},{pendingChapter:result.placement.chapter_id});
         }
+        placement?.markSaved?.(result);
         discardBackup(priorKey);
         state.dirty=state.version!==stamp;
         if(state.dirty)backup();else discardBackup();
