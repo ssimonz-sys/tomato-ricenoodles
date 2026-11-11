@@ -520,5 +520,13 @@
     exitFocus:()=>{if(focused)setFocusMode(false);},
     isFocused:()=>focused
   };
+  // Core author buttons now initialize before optional third-party CDN scripts.
+  // Upgrade the plain Markdown editor when Toast UI finishes loading, using
+  // the CURRENT textarea value so work typed during a slow CDN load survives.
+  window.addEventListener('load',()=>{
+    if(rich||!window.toastui?.Editor||form.hidden||$('#desk-view')?.hidden!==false)return;
+    initRich();
+    refreshOutline();
+  });
   refreshOutline();
 })();
