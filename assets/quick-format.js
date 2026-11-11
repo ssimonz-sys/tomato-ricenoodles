@@ -26,6 +26,7 @@
     const nextBreak=text.indexOf('\n',effectiveEnd);
     const to=nextBreak===-1?text.length:nextBreak;
     const lines=text.slice(from,to).split('\n');
+    const emptySingleLine=lines.length===1&&!lines[0].trim();
     const headingLevel=Math.max(1,Math.min(6,Math.round(Number(level)||2)));
     const marker='#'.repeat(headingLevel)+' ';
     let newLines;
@@ -33,7 +34,7 @@
       const original=lines.length===1&&lines[0].match(/^([ \t]*)(#{1,6})[ \t]+/);
       const toggleOff=!!original&&original[2].length===headingLevel;
       newLines=lines.map(line=>{
-        if(!line.trim())return line;
+        if(!line.trim())return emptySingleLine?line+marker:line;
         const base=line.replace(/^([ \t]*)#{1,6}[ \t]+/,'$1');
         const indent=base.match(/^[ \t]*/)[0];
         return toggleOff?base:indent+marker+base.slice(indent.length);
@@ -42,7 +43,7 @@
       const quoted=line=>/^([ \t]*)>[ \t]?/.test(line);
       const toggleOff=lines.some(x=>x.trim())&&lines.filter(x=>x.trim()).every(quoted);
       newLines=lines.map(line=>{
-        if(!line.trim())return line;
+        if(!line.trim())return emptySingleLine?line+'> ':line;
         if(toggleOff)return line.replace(/^([ \t]*)>[ \t]?/,'$1');
         const indent=line.match(/^[ \t]*/)[0];
         return indent+'> '+line.slice(indent.length);
