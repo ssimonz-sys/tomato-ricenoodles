@@ -200,6 +200,8 @@
     focusFormatting.setAttribute('aria-pressed', String(visible));
   });
   document.addEventListener('keydown', event => {
+    // The standalone controller owns keyboard shortcuts when available.
+    if(window.TRNFocus)return;
     // Alt + Shift + F toggles focus without touching the document.
     if(event.altKey&&event.shiftKey&&event.key.toLowerCase()==='f'&&!event.metaKey&&!event.ctrlKey){
       if(!form.hidden&&$('#desk-view')?.hidden===false){

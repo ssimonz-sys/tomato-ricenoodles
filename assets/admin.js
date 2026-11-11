@@ -54,7 +54,7 @@
     try{await load(requestedId);}
     catch(e){message('#editor-message','已登录，但作品加载失败：'+e.message);console.error('作品加载失败',e);}
   }
-  function showDesk(){ $('#login-view').hidden=true;$('#desk-view').hidden=false;$('#logout').hidden=false; }
+  function showDesk(){ $('#login-view').hidden=true;$('#desk-view').hidden=false;$('#logout').hidden=false;window.TRNFocus?.refresh?.(); }
   const loginForm=$('#login-form');
   loginForm.dataset.trnJsReady='1';
   loginForm.addEventListener('submit',async e=>{
@@ -241,7 +241,7 @@
     const p=state.posts.find(post=>post.id===id)||null;
     state.editing=p?.id||null;state.dirty=false;state.preview=false;state.version=0;
     window.TRNStudio?.exitFocus?.();
-    $('#editor-empty').hidden=true;form.hidden=false;$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
+    $('#editor-empty').hidden=true;form.hidden=false;window.TRNFocus?.refresh?.();$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
     if(edition)form.elements.language.value=edition;

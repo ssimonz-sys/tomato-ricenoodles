@@ -230,8 +230,10 @@ html[data-admin-theme="dark"] .studio-focus-mode #studio-rich-editor .toastui-ed
 .studio-header-focus:hover,.studio-header-focus:focus-visible{
   border-color:var(--accent);color:var(--accent);
 }
-body:has(#editor[hidden]) :is(#studio-header-focus,#studio-focus-fab),
-body:has(#desk-view[hidden]) :is(#studio-header-focus,#studio-focus-fab){
+/* The header action is useful before the first draft has been opened.
+   A click can start a new document directly in focus mode. */
+body:has(#desk-view[hidden]) :is(#studio-header-focus,#studio-focus-fab),
+body:has(#editor[hidden]) #studio-focus-fab{
   display:none!important;
 }
 /* Metadata and placement stay out of the writing canvas until focus ends. */
