@@ -443,7 +443,8 @@
       return true;
     }
   }};
-  check();
+  // Run the authenticated data load after all deferred studio modules exist.
+  document.addEventListener('DOMContentLoaded',()=>{check();},{once:true});
   } catch (error) {
     window.TRNAdminBootError = String(error?.message || error);
     console.error('[Author Studio] Core initialization failed:',error);
