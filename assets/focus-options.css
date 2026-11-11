@@ -276,3 +276,44 @@ body:not(.zen-paper-mode) #zen-settings{display:none!important}
   body.zen-paper-mode #editor.zen-textarea-fallback{padding:132px 20px 90px!important}
   body.zen-paper-mode #zen-settings{padding:17px 20px 36px!important}
 }
+
+/* Quiet, directly accessible formatting in the paper editor.
+   The full Toast UI toolbar remains available through "Show formatting". */
+#editor #zen-quick-format[hidden]{display:none!important}
+#editor #zen-quick-format{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px;
+  width:max-content;max-width:100%;padding:4px 6px;
+  border:1px solid #eceeeb;border-radius:9px;
+  background:transparent;color:#7a8079;
+  font-family:system-ui,-apple-system,sans-serif;
+}
+body.zen-paper-mode #editor #zen-quick-format{
+  margin:28px 0 13px!important;
+  opacity:.72;transition:opacity .15s,border-color .15s;
+}
+body.zen-paper-mode #editor #zen-quick-format:hover,
+body.zen-paper-mode #editor #zen-quick-format:focus-within{opacity:1;border-color:#d7ded7}
+#editor .zen-format-item{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;padding:0!important;
+  border:0!important;border-radius:6px!important;
+  background:transparent!important;color:inherit!important;
+  font:600 12px/1 system-ui,-apple-system,sans-serif!important;
+  cursor:pointer;
+}
+#editor .zen-format-item[data-format="bold"]{font-size:17px!important;font-weight:800!important}
+#editor .zen-format-item[data-format="italic"]{font:italic 700 18px/1 Georgia,serif!important}
+#editor .zen-format-item[data-format="quote"]{font-size:20px!important}
+#editor .zen-format-item:hover{background:#edf4ef!important;color:#345b4b!important}
+#editor .zen-format-item:focus-visible{outline:2px solid #438575;outline-offset:2px}
+body:not(.zen-paper-mode) #editor #zen-quick-format{margin:10px 0}
+html[data-admin-theme="dark"] #editor #zen-quick-format{
+  border-color:#44554b;background:transparent;color:#c5d0c7
+}
+html[data-admin-theme="dark"] #editor .zen-format-item:hover{
+  background:#33463a!important;color:#e8f1e9!important
+}
+@media(max-width:600px){
+  body.zen-paper-mode #editor #zen-quick-format{margin:18px 0 7px!important}
+  #editor .zen-format-item{width:30px;height:30px}
+}
