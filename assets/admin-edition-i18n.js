@@ -5,6 +5,16 @@
   'use strict';
   if(window.TRNAdminSite?.lang!=='en')return;
   const dictionary={
+    '本章包含多个小节':'This chapter contains multiple sections',
+    '章标题':'Chapter title',
+    '例如：（2）家庭不是利益共同体':'e.g. (2) Family and common interests',
+    '＋ 添加下一节':'＋ Add next section',
+    '文章标题就是第一节标题；保存时会自动创建上面填写的章。':'The article title becomes Section 1. Saving also creates the chapter above.',
+    '默认使用文章标题创建单节章节，之后也可以继续添加小节。':'By default, the article title also names the chapter. You can add sections later.',
+    '当前文章将作为所选章节的一节保存。':'This article will be saved as a section of the chosen chapter.',
+    '请填写多节章节的章标题。':'Enter a chapter title for this multi-section chapter.',
+    '章标题不能超过200个字符。':'The chapter title must be 200 characters or fewer.',
+    '请选择新章节，并填写多节章节的章标题。':'Choose a new chapter and enter its title.',
     '作品归属':'Placement',
     '可以直接收进系列，也可以放入系列中的某本书':'Assign this post to a collection or a book within it',
     '系列':'Collection',
