@@ -272,22 +272,40 @@
     repairEditorFields();
     const p=state.posts.find(post=>post.id===id)||null;
     state.editing=p?.id||null;state.dirty=false;state.preview=false;state.version=0;
-    window.TRNStudio?.exitFocus?.();
-    $('#editor-empty').hidden=true;form.hidden=false;window.TRNFocus?.refresh?.();$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
+    try{window.TRNStudio?.exitFocus?.();}catch(error){console.warn('Unable to exit previous focus state',error);}
+    // Opening a document must remain possible even if a rich-text, placement,
+    // cover, or focus component fails. Reveal the basic form first.
+    $('#editor-empty').hidden=true;form.hidden=false;
+    try{window.TRNFocus?.refresh?.();}catch(error){console.warn('Focus UI refresh failed',error);}
+    $('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])
       editorField(name).value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
     if(edition)form.elements.language.value=edition;
     editorField('tags').value=Array.isArray(p?.tags)?p.tags.join(', '):String(p?.tags||'');
     editorField('collection_slugs').value=Array.isArray(p?.collection_slugs)?p.collection_slugs.join(', '):String(p?.collection_slugs||'');
-    window.TRNStudio?.load(p?.body||'');
-    placement?.load(p,{pendingChapter,pendingBook});
+    try{window.TRNStudio?.load(p?.body||'');}
+    catch(error){
+      console.error('Rich editor failed during document load',error);
+      editorField('body').value=p?.body||'';
+      $('#content-body').hidden=false;
+      const mount=document.querySelector('#studio-rich-editor');
+      if(mount)mount.hidden=true;
+      message('#editor-message','正文编辑器加载失败，已保留普通文本编辑模式：'+error.message);
+    }
+    try{placement?.load(p,{pendingChapter,pendingBook});}
+    catch(error){
+      console.error('Placement selector failed during document load',error);
+      message('#editor-message','作品归属暂不可用：'+error.message+'。可以先撰写正文。');
+    }
     $('#edit-label').textContent=p?'编辑文章':'新建文章';
     $('#delete-post').hidden=!p;
-    $('#save-status').textContent='';$('#editor-message').textContent='';
+    $('#save-status').textContent='';
     renderList();
-    updatePublishControls();recover(p);
-    window.TRNCoverUpload?.refresh(form.elements.cover_url);
+    updatePublishControls();
+    try{recover(p);}catch(error){console.warn('Local draft restore failed',error);}
+    try{window.TRNCoverUpload?.refresh(form.elements.cover_url);}
+    catch(error){console.warn('Cover preview failed',error);}
     if(!p)form.elements.title.focus();
   }
   function updatePublishControls(){
@@ -308,11 +326,29 @@
   }
   form.elements.language.addEventListener('change',updatePublishControls);
   form.elements.status.addEventListener('change',updatePublishControls);
-  $('#new-post').addEventListener('click',()=>{
+  const newPostButton=$('#new-post');
+  newPostButton.dataset.trnNewPostReady='1';
+  newPostButton.addEventListener('click',()=>{
     if(!canChange())return;
     pendingChapter=null;pendingBook=null;
-    history.replaceState({},'',location.pathname+'?new=1'+(edition?'':'&lang=zh'));
-    edit();form.elements.language.value=edition||'zh';placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();
+    try{history.replaceState({},'',location.pathname+'?new=1'+(edition?'':'&lang=zh'));}
+    catch(error){console.warn('Cannot update new-post URL',error);}
+    try{
+      edit();
+      editorField('language').value=edition||'zh';
+      updatePublishControls();
+    }catch(error){
+      console.error('Unable to initialize new post',error);
+      // Keep the author's writing form reachable; only supplementary editing
+      // controls may be unavailable.
+      $('#editor-empty').hidden=true;
+      form.hidden=false;
+      const notice='新建文章时部分组件加载失败：'+error.message+'。请先检查正文输入框。';
+      $('#editor-message').textContent=notice;
+      $('#save-status').textContent=notice;
+      form.scrollIntoView?.({block:'start'});
+      editorField('title').focus();
+    }
   });
   form.addEventListener('input',changed);
   form.addEventListener('change',changed);
@@ -393,6 +429,18 @@
     catch(e){message('#editor-message',e.message);}
   });
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
-  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){if(!canChange())return false;edit();form.elements.language.value=edition||language;placement?.load(null,{pendingChapter,pendingBook});updatePublishControls();return true;}};
+  window.TRNDesk={request:req,edit(id){if(!canChange())return false;edit(id);return true;},newPost(language='zh'){
+    if(!canChange())return false;
+    try{
+      pendingChapter=null;pendingBook=null;
+      edit();editorField('language').value=edition||language;updatePublishControls();
+      return true;
+    }catch(error){
+      console.error('Focus new-post initialization failed',error);
+      $('#editor-empty').hidden=true;form.hidden=false;
+      message('#editor-message','已打开基本编辑区，附加组件初始化失败：'+error.message);
+      return true;
+    }
+  }};
   check();
 })();
