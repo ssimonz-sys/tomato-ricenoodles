@@ -20,20 +20,10 @@
   let readingPreview = false;
   let outlineTimer = null;
   let focused = false;
-  let liveIndentObserver = null;
-  let liveIndentFrame = 0;
-  function updateLiveIndent(){
-    if(!rich || !rich.isMarkdownMode())return;
-    const preview=richMount.querySelector('.toastui-editor-md-preview');
-    if(preview)window.TRNLiveIndent?.apply(preview,rich.getMarkdown());
-  }
-  function queueLiveIndent(){
-    if(liveIndentFrame)return;
-    liveIndentFrame=requestAnimationFrame(()=>{
-      liveIndentFrame=0;
-      updateLiveIndent();
-    });
-  }
+  let legacyLayoutSource='';
+  const specialLayout=/<span data-trn-(?:align|indent)=/;
+  const visuallyEquivalent=(a,b)=>String(a||'').replace(/<span data-trn-(?:align|indent)="[^"]+"><\/span>/g,'').replace(/\s+/g,' ').trim()===
+    String(b||'').replace(/<span data-trn-(?:align|indent)="[^"]+"><\/span>/g,'').replace(/\s+/g,' ').trim();
   const htmlEscape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   // Move metadata into a drawer while keeping every field inside the existing form.
@@ -126,23 +116,20 @@
   if (bottom) bottom.hidden = true;
   topbar.append(actions);
 
-  const headingTools = document.createElement('div');
-  headingTools.className = 'studio-heading-guide';
-  headingTools.innerHTML = '<span>长文结构</span><select id="studio-heading-level" aria-label="选择标题级别"><option value="1">一级标题</option><option value="2">二级标题</option><option value="3">三级标题</option><option value="4">四级标题</option><option value="5">五级标题</option><option value="6">六级标题</option></select><button type="button" id="studio-add-heading">插入标题</button><button type="button" id="studio-add-sample">插入分节示例</button>';
-  const hint = document.createElement('p');
-  hint.className = 'studio-editor-hint';
-  hint.textContent = '粘贴内容自动去除外部格式，只保留文字和换行。正文可对齐、缩进；保存与发布请使用上方的「发布与归档」。';
+  // All formatting is handled directly in the visual editor toolbar.
+  const hint=document.createElement('p');
+  hint.className='studio-editor-hint';
+  hint.textContent='直接编辑正文，可在工具栏设置标题、粗体、斜体和引用。';
   const layoutStatus=document.createElement('p');
   layoutStatus.id='studio-layout-status';
   layoutStatus.className='studio-layout-status';
   layoutStatus.setAttribute('role','status');
   layoutStatus.setAttribute('aria-live','polite');
-  bodyTop.before(headingTools,hint,layoutStatus);
+  bodyTop.before(hint,layoutStatus);
   // Intercept clipboard events before Toast UI processes rich HTML. Keep only
   // Unicode text, line breaks and spaces; styling comes from this editor.
   window.TRNPlainTextPaste?.install(richMount,()=>rich,textarea,()=>{
     syncEditor();
-    queueLiveIndent();
     scheduleOutline();
   });
 
@@ -227,98 +214,32 @@
     if (event.key === 'Escape' && focused && !settings.classList.contains('open')) setFocusMode(false);
   }, true);
 
-  function getMarkdown() { return rich ? rich.getMarkdown() : textarea.value; }
-  function syncEditor() {
-    if (loading || !rich) return;
-    const markdown = rich.getMarkdown();
-    // A round-trip through WYSIWYG may discard custom inline HTML markers.
-    // Restore the source before any autosave could overwrite these layouts.
-    if(!rich.isMarkdownMode()&&/<span data-trn-(?:align|indent)=/.test(textarea.value)&&
-       !/<span data-trn-(?:align|indent)=/.test(markdown)){
-      const preserved=textarea.value;
-      loading=true;
-      rich.changeMode('markdown',true);
-      rich.setMarkdown(preserved,false);
-      loading=false;
-      const status=$('#studio-layout-status');
-      if(status)status.textContent='为保护段落格式，已返回 Markdown 排版模式。';
-      return;
+  // Store the same Markdown representation for compatibility with existing
+  // published articles. Readers and the database remain unchanged.
+  function validateContent(){
+    if(!rich)throw Error('所见即所得编辑器加载失败，请刷新页面后再保存。');
+    const next=rich.getMarkdown();
+    if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
+       !specialLayout.test(next)&&!visuallyEquivalent(legacyLayoutSource,next)){
+      throw Error('此文章含有旧版段落缩进或对齐标记。当前修改会丢失这些格式，暂时禁止覆盖保存，请先备份文章。');
     }
-    if (textarea.value !== markdown) {
-      textarea.value = markdown;
-      textarea.dispatchEvent(new Event('input', {bubbles: true}));
+  }
+  function getMarkdown(){
+    if(!rich)return textarea.value;
+    const value=rich.getMarkdown();
+    if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
+       !specialLayout.test(value)&&visuallyEquivalent(legacyLayoutSource,value))return legacyLayoutSource;
+    return value;
+  }
+  function syncEditor(){
+    if(loading||!rich)return;
+    const next=getMarkdown();
+    if(textarea.value!==next){
+      textarea.value=next;
+      textarea.dispatchEvent(new Event('input',{bubbles:true}));
     }
     scheduleOutline();
-    queueLiveIndent();
   }
-  function createLayoutTool(name,label,glyph,command){
-    const control=document.createElement('button');
-    control.type='button';
-    control.className='studio-paragraph-tool';
-    control.textContent=glyph;
-    control.setAttribute('aria-label',label);
-    control.title=label;
-    // Retain the selection while the toolbar button is clicked.
-    control.addEventListener('mousedown',event=>event.preventDefault());
-    control.addEventListener('click',event=>{event.preventDefault();applyParagraphLayout(command);});
-    return {name,el:control};
-  }
-
-  function applyParagraphLayout(command){
-    const formatter=window.TRNParagraphLayout;
-    if(!formatter)return;
-    if(rich){
-      if(!rich.isMarkdownMode()){
-        // Markdown positions are required for a lossless source-level edit.
-        // TOAST UI's native indent/outdent are enabled only inside lists.
-        let converted=null;
-        try{
-          const [from,to]=rich.getSelection();
-          converted=rich.convertPosToMatchEditorMode(from,to,'markdown');
-        }catch{}
-        rich.changeMode('markdown',true);
-        if(Array.isArray(converted)&&Array.isArray(converted[0])&&Array.isArray(converted[1])){
-          try{rich.setSelection(converted[0],converted[1]);}catch{}
-        }
-        rich.changePreviewStyle('vertical');
-      }
-      const selection=rich.getSelection();
-      const original=rich.getMarkdown();
-      const result=formatter.apply(original,selection,command);
-      if(!result.changes.length){
-        const notice=$('#studio-layout-status');
-        if(notice)notice.textContent='请将光标放在普通正文段落中，标题、列表及代码块不支持此项操作。';
-        return;
-      }
-      try{
-        // Replace from bottom to top to preserve line positions and the undo stack.
-        for(const change of result.changes.slice().reverse()){
-          rich.replaceSelection(change.next,[change.line,1],[change.line,change.old.length+1]);
-        }
-      }catch(error){
-        // Preserve the formatted source even if an older editor build rejects
-        // replaceSelection's line/column arguments.
-        rich.setMarkdown(result.markdown,false);
-      }
-      const next=rich.getMarkdown();
-      if(next!==result.markdown)rich.setMarkdown(result.markdown,false);
-      rich.focus();
-      syncEditor();
-    }else{
-      const raw=textarea.value;
-      const from=raw.slice(0,textarea.selectionStart).split('\n').length;
-      const to=raw.slice(0,textarea.selectionEnd).split('\n').length;
-      const range=[[from,1],[to,textarea.selectionEnd===textarea.selectionStart?1:2]];
-      const result=formatter.apply(raw,range,command);
-      if(!result.changes.length)return;
-      textarea.value=result.markdown;
-      textarea.dispatchEvent(new Event('input',{bubbles:true}));
-      textarea.focus();
-    }
-    const notice=$('#studio-layout-status');
-    if(notice)notice.textContent='段落格式已应用，保存文章后会同步到读者页面。';
-  }
-
   function initRich() {
     if (rich || !window.toastui || !window.toastui.Editor) return;
     try {
@@ -331,13 +252,12 @@
         previewStyle: 'vertical',
         language: 'zh-CN',
         usageStatistics: false,
-        hideModeSwitch: false,
+        hideModeSwitch: true,
         toolbarItems: [
           ['heading','bold','italic','strike'],
-          ['hr','quote'],
-          ['ul','ol',createLayoutTool('trn-indent','增加段落缩进','⇥','indent'),createLayoutTool('trn-outdent','减少段落缩进','⇤','outdent')],
-          [createLayoutTool('trn-left','左对齐','☷','left'),createLayoutTool('trn-center','居中','≡','center'),createLayoutTool('trn-right','右对齐','☰','right')],
-          ['table','link'],['code','codeblock']
+          ['quote','hr'],
+          ['ul','ol'],
+          ['table','link']
         ],
         customHTMLRenderer:{
           htmlInline:{
@@ -348,22 +268,19 @@
         },
         hooks: {addImageBlobHook: () => { alert('请先上传图片并通过图片网址插入，目前不支持直接粘贴图片文件。'); return false; }}
       });
-      rich.on('change',()=>{
-        syncEditor();
-        queueLiveIndent();
-      });
-      // Toast UI regenerates its preview nodes after parsing. Watch only
-      // child/text updates, so setting paragraph padding cannot loop.
-      liveIndentObserver=new MutationObserver(()=>queueLiveIndent());
-      liveIndentObserver.observe(richMount,{subtree:true,childList:true,characterData:true});
-      queueLiveIndent();
+      rich.on('change',syncEditor);
       textarea.classList.add('studio-source-hidden');
+      textarea.hidden=true;
       richMount.classList.add('is-ready');
       window.TRNAdminTheme?.applyEditor();
     } catch(error) {
       rich = null;
       richMount.textContent = '';
-      console.warn('富文本组件不可用，已回退为 Markdown 输入框。', error);
+      textarea.hidden=true;
+      textarea.classList.add('studio-source-hidden');
+      const notice=$('#studio-layout-status');
+      if(notice)notice.textContent='可视化编辑器加载失败，请刷新页面。为保护原文已停止保存。';
+      console.error('WYSIWYG editor unavailable',error);
     }
   }
 
@@ -386,7 +303,6 @@
   }
   function jumpToHeading(item, index) {
     if (rich) {
-      if (rich.isMarkdownMode()) rich.changeMode('wysiwyg');
       requestAnimationFrame(() => {
         const nodes = richMount.querySelectorAll('.toastui-editor-ww-container h1,.toastui-editor-ww-container h2,.toastui-editor-ww-container h3,.toastui-editor-ww-container h4,.toastui-editor-ww-container h5,.toastui-editor-ww-container h6');
         const target = nodes[index];
@@ -435,57 +351,25 @@
   }
   function scheduleOutline() { clearTimeout(outlineTimer); outlineTimer = setTimeout(refreshOutline,220); }
   textarea.addEventListener('input', () => {if(!rich) scheduleOutline();});
-  function load(markdown='') {
+  function load(markdown=''){
     closeSettings();
+    legacyLayoutSource=String(markdown||'');
+    loading=true;
+    textarea.value=legacyLayoutSource;
+    textarea.hidden=true;
     initRich();
-    loading = true;
-    textarea.value = markdown || '';
-    if (rich) {
-      // Switch first: converting through WYSIWYG could remove inline markers.
-      if(/<span data-trn-(?:align|indent)=/.test(markdown||'')){
-        if(!rich.isMarkdownMode())rich.changeMode('markdown',true);
-        rich.changePreviewStyle('vertical');
-      }
-      rich.setMarkdown(markdown || '', false);
+    if(rich)rich.setMarkdown(legacyLayoutSource,false);
+    if(readingPreview){
+      readingPreview=false;
+      $('#markdown-preview').hidden=true;
+      richMount.hidden=false;
     }
-    if (readingPreview) {
-      readingPreview = false;
-      $('#markdown-preview').hidden = true;
-      richMount.hidden = false;
-      if (!rich) textarea.hidden = false;
-      $('#preview-toggle').textContent = '阅读全文预览';
-    }
-    queueMicrotask(() => {loading=false;refreshOutline();queueLiveIndent();});
+    const notice=$('#studio-layout-status');
+    if(notice&&rich)notice.textContent=specialLayout.test(legacyLayoutSource)?
+      '这篇旧文章含有特殊段落格式。为防止原文丢失，不兼容的编辑将被阻止保存。':'';
+    queueMicrotask(()=>{loading=false;refreshOutline();});
   }
-  function insertMarkdown(text) {
-    if (rich) {
-      rich.changeMode('markdown');
-      rich.insertText(text);
-    } else {
-      const from = textarea.selectionStart, to = textarea.selectionEnd;
-      textarea.setRangeText(text,from,to,'end');
-      textarea.focus();
-      textarea.dispatchEvent(new Event('input',{bubbles:true}));
-    }
-    scheduleOutline();
-  }
-  $('#studio-add-heading').addEventListener('click', () => {
-    const n = Math.max(1,Math.min(6,Number($('#studio-heading-level').value)||1));
-    insertMarkdown('\n\n'+'#'.repeat(n)+' 新标题\n');
-  });
-  $('#studio-add-sample').addEventListener('click', () => {
-    if (getMarkdown().trim() && !confirm('将在当前光标位置插入示例标题结构。确定继续吗？')) return;
-    const snippet = [
-      '', '# 前言', '', '在这里撰写前言。', '', '# 主目录', '',
-      '## 一、家庭篇', '', '### 1. 父母的权威从何而来', '',
-      '#### （1）不会反抗的孩子', '', '##### a. 家庭的起源', '',
-      '###### （上）虚假的义务', '', '继续写作……', '',
-      '# 附录', '', '## （一）参考材料', ''
-    ].join('\n');
-    insertMarkdown(snippet);
-  });
-
-  $('#preview-toggle').textContent = '阅读全文预览';
+  $('#preview-toggle').textContent='阅读预览';
   $('#preview-toggle').addEventListener('click', event => {
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -503,7 +387,7 @@
     } else {
       panel.hidden = true;
       richMount.hidden = false;
-      if (!rich) textarea.hidden = false;
+      textarea.hidden=true;
       $('#preview-toggle').textContent = '阅读全文预览';
     }
   }, true);
@@ -523,18 +407,15 @@
         return false;
       }
     }
-    return window.TRNQuickFormat?.applyToTextarea(
-      textarea,kind,level,window.TRNAdminSite?.lang||'zh'
-    )||false;
+    return false;
   }
-  window.TRNStudio = {load, getMarkdown, refreshOutline,format,
+  window.TRNStudio = {load, getMarkdown,validateContent, refreshOutline,format,
     toggleFocus:()=>setFocusMode(!focused),
     exitFocus:()=>{if(focused)setFocusMode(false);},
     isFocused:()=>focused
   };
   // Core author buttons now initialize before optional third-party CDN scripts.
-  // Upgrade the plain Markdown editor when Toast UI finishes loading, using
-  // the CURRENT textarea value so work typed during a slow CDN load survives.
+  // Mount the visual editor after vendor scripts finish; source remains hidden.
   window.addEventListener('load',()=>{
     if(rich||!window.toastui?.Editor||form.hidden||$('#desk-view')?.hidden!==false)return;
     initRich();
