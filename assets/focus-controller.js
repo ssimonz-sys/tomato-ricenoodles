@@ -9,6 +9,7 @@
   const edition=window.TRNAdminSite?.lang||'zh';
   const en=edition==='en';
   let active=false;
+  const subscribers=new Set();
 
   function ensureExitButton(){
     let button=$('#studio-focus-fab');
@@ -74,6 +75,7 @@
       document.body.classList.remove('studio-panel-open');
     }
     labels();
+    for(const subscriber of subscribers){try{subscriber(active);}catch(err){console.error('Focus layout subscriber failed',err);}}
     if(active){
       // Bring the editor into view; the existing editor element stays mounted
       // so cursor position, undo history and draft autosaving survive.
@@ -113,7 +115,14 @@
     }
   },true);
 
-  const api={set,toggle,isActive:()=>active,refresh:labels};
+  const api={set,toggle,isActive:()=>active,refresh:labels,
+    subscribe(callback){
+      if(typeof callback!=='function')return ()=>{};
+      subscribers.add(callback);
+      callback(active);
+      return ()=>subscribers.delete(callback);
+    }
+  };
   window.TRNFocus=api;
   if(window.TRNStudio){
     window.TRNStudio.toggleFocus=toggle;
