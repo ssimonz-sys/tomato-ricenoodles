@@ -57,61 +57,6 @@
   toolbar.append(optionBtn,buttonSlot,exitBtn);
   top.append(toolbar);
 
-  // Four core typography actions stay within arm's reach while writing.
-  // The normal rich editor already has these commands in its full toolbar;
-  // this quiet strip is shown in focus mode and in the plain-text fallback.
-  const quickBar=create('div','zen-quick-format');
-  quickBar.id='zen-quick-format';
-  quickBar.setAttribute('role','toolbar');
-  quickBar.setAttribute('aria-label',txt('文字格式','Text formatting'));
-  const buttonSpecs=[
-    ['bold','B',txt('粗体','Bold'),null],
-    ['italic','I',txt('斜体','Italic'),null],
-    ['heading','H1',txt('一级标题','Heading 1'),1],
-    ['heading','H2',txt('二级标题','Heading 2'),2],
-    ['heading','H3',txt('三级标题','Heading 3'),3],
-    ['quote','❝',txt('引用','Blockquote'),null]
-  ];
-  for(const [kind,glyph,label,level] of buttonSpecs){
-    const button=create('button','zen-format-item',glyph);
-    button.type='button';
-    button.setAttribute('aria-label',label);
-    button.title=label;
-    button.dataset.format=kind;
-    if(level)button.dataset.level=String(level);
-    // Preserve editor selection, including a selected paragraph in Toast UI.
-    button.addEventListener('mousedown',event=>event.preventDefault());
-    button.addEventListener('click',event=>{
-      event.preventDefault();
-      const completed=window.TRNStudio?.format?.(kind,level||2);
-      if(completed)return;
-      const richReady=$('#studio-rich-editor')?.classList.contains('is-ready');
-      // Never overwrite a currently visible rich editor using stale textarea
-      // contents. Only use the source transform when the rich editor is absent.
-      if(!richReady){
-        window.TRNQuickFormat?.applyToTextarea(
-          bodyInput,kind,level||2,en?'en':'zh'
-        );
-      }
-    });
-    quickBar.append(button);
-  }
-  function refreshQuickBar(){
-    const rich=$('#studio-rich-editor');
-    const ready=!!rich?.classList.contains('is-ready');
-    const raw=bodyInput?.closest('label')||bodyInput;
-    const target=ready?rich:raw;
-    if(target?.parentNode)target.before(quickBar);
-    else if(!quickBar.parentNode)form.append(quickBar);
-    quickBar.hidden=!focused&&ready;
-  }
-  const richMount=$('#studio-rich-editor');
-  if(richMount){
-    new MutationObserver(()=>refreshQuickBar()).observe(richMount,{
-      attributes:true,attributeFilter:['class']
-    });
-  }
-
   const sidebar=create('aside','zen-settings');
   sidebar.id='zen-settings';
   sidebar.setAttribute('aria-label',txt('写作选项','Writing options'));
@@ -223,7 +168,6 @@
 
   function update(active){
     focused=!!active;
-    refreshQuickBar();
     // The old stacked focus styles conflicted with this clean page.
     // One class now owns its layout, so the raw textarea also has a fallback.
     document.body.classList.remove('studio-focus-mode');
