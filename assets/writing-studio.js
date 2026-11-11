@@ -495,7 +495,27 @@
       $('#preview-toggle').textContent = '阅读全文预览';
     }
   }, true);
-  window.TRNStudio = {load, getMarkdown, refreshOutline,
+  // These compact commands are available in both full and focus editors.
+  // Use Toast UI's native commands to keep selections and undo history intact.
+  function format(kind,level=2){
+    if(!['bold','italic','heading','quote'].includes(kind))return false;
+    if(rich){
+      try{
+        if(kind==='heading')rich.exec('heading',{level:Math.max(1,Math.min(6,Number(level)||2))});
+        else rich.exec(kind==='quote'?'blockQuote':kind);
+        syncEditor();
+        rich.focus();
+        return true;
+      }catch(error){
+        console.warn('Rich-text formatting command failed',kind,error);
+        return false;
+      }
+    }
+    return window.TRNQuickFormat?.applyToTextarea(
+      textarea,kind,level,window.TRNAdminSite?.lang||'zh'
+    )||false;
+  }
+  window.TRNStudio = {load, getMarkdown, refreshOutline,format,
     toggleFocus:()=>setFocusMode(!focused),
     exitFocus:()=>{if(focused)setFocusMode(false);},
     isFocused:()=>focused
