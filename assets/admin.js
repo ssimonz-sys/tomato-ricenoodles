@@ -145,7 +145,7 @@
   }
   function backup(){
     if(form.hidden)return;
-    try{localStorage.setItem(draftKey(),JSON.stringify({time:Date.now(),data:collect()}));}catch{}
+    try{localStorage.setItem(draftKey(),JSON.stringify({time:Date.now(),data:{...collect(),__placement:placement?.getDraftState?.()}}));}catch{}
   }
   function discardBackup(key=draftKey()){try{localStorage.removeItem(key)}catch{}}
   function recover(p){
@@ -154,13 +154,17 @@
     try{
       const saved=JSON.parse(raw),copy=saved?.data;
       if(!copy)return;
-      const changed=copy.title!==(p?.title||'')||copy.body!==(p?.body||'')||copy.excerpt!==(p?.excerpt||'');
+      const currentPlacement=placement?.getDraftState?.();
+      const placementChanged=!!(copy.__placement&&currentPlacement&&
+        Object.keys(copy.__placement).some(key=>String(copy.__placement[key]??'')!==String(currentPlacement[key]??'')));
+      const changed=copy.title!==(p?.title||'')||copy.body!==(p?.body||'')||copy.excerpt!==(p?.excerpt||'')||placementChanged;
       if(!changed||saved.time<=(p?.updated_at?Date.parse(p.updated_at)||0:0)){discardBackup(draftKey(p?.id));return;}
       if(!confirm('发现未保存的本机写作副本，要恢复吗？'))return;
       for(const key of ['language','type','title','slug','excerpt','cover_url','collection_slugs','status','tags']){
         if(form.elements[key] && copy[key]!==undefined)form.elements[key].value=copy[key];
       }
       window.TRNStudio?.load(copy.body||'');
+      placement?.restoreDraftState?.(copy.__placement);
       state.dirty=true;state.version++;
       $('#save-status').textContent='已恢复本机副本';updatePublishControls();
     }catch{}
