@@ -1,0 +1,169 @@
+/* Paper-and-sidebar focus layout for both author editions.
+   Loaded last to override the previous dashboard-style focus declarations. */
+body.zen-writing-mode,
+body.zen-writing-mode:has(#desk-view:not([hidden])){background:#fff!important}
+body.zen-writing-mode .desk-container{padding:0!important}
+body.zen-writing-mode .form-top{
+  position:fixed!important;top:0!important;left:0!important;right:0!important;
+  width:100%!important;min-height:75px!important;padding:16px 32px!important;
+  display:flex!important;align-items:center!important;flex-wrap:nowrap!important;
+  border:0!important;box-shadow:none!important;background:#fff!important;
+  transition:right .2s ease;z-index:28!important;
+}
+body.zen-writing-mode .form-top #save-status{
+  display:inline-block!important;margin:0 auto 0 0!important;
+  min-width:100px;max-width:45%;font:12px/1.4 var(--sans)!important;
+  color:#a2a5a0!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+body.zen-writing-mode .studio-top-actions{margin:0!important;width:auto!important;display:flex!important;flex-wrap:nowrap!important;gap:10px!important}
+body.zen-writing-mode .studio-top-actions #studio-focus,
+body.zen-writing-mode .studio-top-actions #studio-settings-open,
+body.zen-writing-mode .studio-top-actions #studio-focus-format,
+body.zen-writing-mode #studio-focus-fab{display:none!important}
+body.zen-writing-mode .studio-top-actions .editor-buttons{margin:0!important;display:flex!important}
+body.zen-writing-mode #save-post{border-radius:10px!important;padding:11px 22px!important;font:600 13px var(--sans)!important}
+body.zen-writing-mode .zen-options-toggle,
+body.zen-writing-mode .zen-exit-focus{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  font:600 13px var(--sans);cursor:pointer;white-space:nowrap;
+  background:#fff;color:#4b504a;border:1px solid #e9e9e6;border-radius:10px;
+  padding:10px 16px;min-height:39px
+}
+body.zen-writing-mode .zen-options-toggle[aria-expanded="true"]{border-color:#618b7e;background:#f5f9f7}
+body.zen-writing-mode .zen-exit-focus{border:0;color:#929790;padding:10px}
+body.zen-writing-mode :is(.zen-options-toggle,.zen-exit-focus):hover{color:#30695c;border-color:#bad0c8}
+body.zen-writing-mode .studio-paper{
+  width:min(100%,790px)!important;max-width:790px!important;
+  margin:0 auto!important;padding:160px 35px 150px!important;
+  background:transparent!important;
+}
+body.zen-writing-mode .studio-paper label:has(input[name="title"]){margin-bottom:14px!important}
+body.zen-writing-mode .studio-paper input[name="title"]{
+  font:500 clamp(30px,3.2vw,40px)/1.48 "Songti SC","Noto Serif CJK SC",Georgia,serif!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+  padding:0 0 12px!important;min-height:60px;color:#242820!important;
+}
+body.zen-writing-mode .studio-paper input[name="title"]::placeholder{color:#b7b9b5!important}
+body.zen-writing-mode .studio-paper label:has(input[name="excerpt"]){margin-bottom:38px!important}
+body.zen-writing-mode .studio-paper input[name="excerpt"]{
+  font:16px/1.8 "Songti SC",Georgia,serif!important;
+  border:0!important;border-left:1px solid #e2e4e0!important;
+  padding:9px 0 9px 24px!important;color:#4b544f!important;
+  background:transparent!important;
+}
+body.zen-writing-mode .studio-paper input[name="excerpt"]::placeholder{color:#babdb8!important}
+body.zen-writing-mode #studio-rich-editor .toastui-editor-defaultUI,
+body.zen-writing-mode #studio-rich-editor .toastui-editor-ww-container,
+body.zen-writing-mode #studio-rich-editor .toastui-editor-main,
+body.zen-writing-mode #studio-rich-editor .toastui-editor-md-container{
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+body.zen-writing-mode #studio-rich-editor .toastui-editor-ww-container .ProseMirror{
+  padding:8px 0 100px!important;min-height:60vh!important;
+  font-size:19px!important;line-height:2!important;
+}
+body.zen-writing-mode #studio-rich-editor .toastui-editor-defaultUI{min-height:68vh!important}
+body.zen-writing-mode #studio-rich-editor .toastui-editor-toolbar,
+body.zen-writing-mode #studio-rich-editor .toastui-editor-mode-switch{display:none!important}
+body.zen-writing-mode.studio-focus-tools-visible #studio-rich-editor .toastui-editor-toolbar,
+body.zen-writing-mode.studio-focus-tools-visible #studio-rich-editor .toastui-editor-mode-switch{display:flex!important}
+body.zen-writing-mode .studio-settings{
+  display:block!important;position:fixed!important;top:0!important;right:0!important;
+  width:408px!important;max-width:100vw!important;height:100dvh!important;z-index:40!important;
+  visibility:hidden;transform:translateX(104%);
+  padding:22px 30px 44px!important;border:0!important;border-left:1px solid #efefed!important;
+  border-radius:0!important;background:#fff!important;color:#292e2c!important;
+  box-shadow:-16px 0 42px rgba(0,0,0,.035)!important;
+  transition:transform .2s ease,visibility .2s ease!important;overflow:auto!important;
+}
+body.zen-writing-mode .studio-settings.open{transform:translateX(0)!important;visibility:visible!important}
+body.zen-writing-mode .studio-settings-head{
+  padding:14px 0 20px!important;margin:0 0 22px!important;
+  border-bottom:0!important;align-items:center!important
+}
+body.zen-writing-mode .studio-settings-head strong{font:700 20px/1.5 "Songti SC",Georgia,serif!important}
+body.zen-writing-mode .studio-settings-head p{display:none}
+body.zen-writing-mode .studio-settings-head button{
+  color:#959b95!important;white-space:nowrap;font:500 14px var(--sans)!important;
+  width:auto!important;padding:5px!important
+}
+body.zen-writing-mode .zen-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0 0 24px;
+  border-bottom:1px solid #e5e9e7
+}
+body.zen-writing-mode .zen-tab{
+  appearance:none;background:transparent;border:0;border-bottom:2px solid transparent;
+  color:#9b9e9b;font:600 13px var(--sans);padding:14px 4px;cursor:pointer
+}
+body.zen-writing-mode .zen-tab[aria-selected="true"]{border-bottom-color:#397566;color:#273f38}
+body.zen-writing-mode .zen-tab-pane[hidden]{display:none!important}
+body.zen-writing-mode .zen-card,
+body.zen-writing-mode #studio-settings .studio-placement,
+body.zen-writing-mode #studio-settings .studio-publication-bar{
+  display:block!important;margin:0 0 18px!important;padding:18px 17px!important;
+  border:1px solid #e8ebe9!important;border-radius:15px!important;
+  box-shadow:none!important;background:#fff!important
+}
+body.zen-writing-mode .zen-card h3{letter-spacing:0!important;color:#343d37!important;font:700 13px/1.6 var(--sans)!important;margin:0 0 10px!important}
+body.zen-writing-mode .zen-card p,
+body.zen-writing-mode .zen-card-desc{font:12px/1.65 var(--sans);color:#9aa29d;margin:0 0 12px}
+body.zen-writing-mode #studio-settings .studio-placement-heading{
+  display:block!important;margin:0 0 10px!important
+}
+body.zen-writing-mode #studio-settings .studio-placement-heading strong{font-size:13px}
+body.zen-writing-mode #studio-settings .studio-placement-heading span{display:block;margin-top:5px;font-size:11px;color:#9aa29d}
+body.zen-writing-mode #studio-settings .studio-placement-fields{grid-template-columns:1fr!important;gap:14px!important}
+body.zen-writing-mode #studio-settings .studio-placement-actions{gap:6px}
+body.zen-writing-mode #studio-settings .studio-publication-bar .publishing-controls{display:block!important}
+body.zen-writing-mode #studio-settings .studio-publication-bar .publish-feedback{display:block!important}
+body.zen-writing-mode #studio-settings .studio-publication-bar #editor-message{display:block!important}
+body.zen-writing-mode #studio-settings input,
+body.zen-writing-mode #studio-settings select{
+  max-width:100%;min-width:0;border:1px solid #e6eae7;background:#fff!important;color:#3c443f;
+  border-radius:8px;padding:10px 11px;font-size:13px!important
+}
+body.zen-writing-mode .zen-format-toggle{
+  appearance:none;background:#f7faf8;border:1px solid #dce8e2;color:#376c5c;
+  border-radius:8px;padding:9px 12px;font:600 12px var(--sans);cursor:pointer
+}
+body.zen-writing-mode .zen-options-toggle:focus-visible,
+body.zen-writing-mode .zen-tab:focus-visible,
+body.zen-writing-mode .zen-exit-focus:focus-visible,
+body.zen-writing-mode .zen-format-toggle:focus-visible{outline:2px solid #397566;outline-offset:3px}
+body.zen-writing-mode .studio-backdrop{display:none!important}
+body.zen-writing-mode.zen-options-open #desk-view{width:calc(100% - 408px)!important}
+body.zen-writing-mode.zen-options-open .form-top{right:408px!important;width:calc(100% - 408px)!important}
+body.zen-writing-mode .zen-tabs,
+body.zen-writing-mode .zen-tab-pane{display:none}
+body.zen-writing-mode .studio-settings.open .zen-tabs,
+body.zen-writing-mode .studio-settings.open .zen-tab-pane:not([hidden]){display:block}
+body.zen-writing-mode .studio-settings.open .zen-tabs{display:grid}
+body:not(.zen-writing-mode) .zen-options-toggle,
+body:not(.zen-writing-mode) .zen-exit-focus,
+body:not(.zen-writing-mode) .zen-tabs,
+body:not(.zen-writing-mode) .zen-tab-pane{display:none!important}
+html[data-admin-theme="dark"] body.zen-writing-mode{background:#1c241e!important}
+html[data-admin-theme="dark"] body.zen-writing-mode .form-top,
+html[data-admin-theme="dark"] body.zen-writing-mode .studio-settings{background:#202b24!important;color:#e6ece5!important}
+html[data-admin-theme="dark"] body.zen-writing-mode .zen-card,
+html[data-admin-theme="dark"] body.zen-writing-mode #studio-settings .studio-placement,
+html[data-admin-theme="dark"] body.zen-writing-mode #studio-settings .studio-publication-bar{background:#243128!important;border-color:#3e4b40!important}
+html[data-admin-theme="dark"] body.zen-writing-mode .zen-tab{color:#ccd7cd}
+html[data-admin-theme="dark"] body.zen-writing-mode .zen-options-toggle,
+html[data-admin-theme="dark"] body.zen-writing-mode .zen-exit-focus{background:#27342a;color:#e4eae3;border-color:#4d5b50}
+html[data-admin-theme="dark"] body.zen-writing-mode .studio-paper input[name="title"],
+html[data-admin-theme="dark"] body.zen-writing-mode .studio-paper input[name="excerpt"]{color:#e4eae3!important}
+@media(max-width:900px){
+  body.zen-writing-mode.zen-options-open #desk-view{width:100%!important}
+  body.zen-writing-mode.zen-options-open .form-top{right:0!important;width:100%!important}
+  body.zen-writing-mode .studio-settings{width:min(408px,100vw)!important;box-shadow:-16px 0 50px rgba(0,0,0,.15)!important}
+}
+@media(max-width:600px){
+  body.zen-writing-mode .form-top{padding:12px 14px!important;gap:8px}
+  body.zen-writing-mode .studio-paper{padding:125px 20px 80px!important}
+  body.zen-writing-mode #save-status{max-width:24%;font-size:10px!important}
+  body.zen-writing-mode .studio-top-actions{gap:5px!important}
+  body.zen-writing-mode .zen-options-toggle,
+  body.zen-writing-mode .zen-exit-focus{font-size:11px;padding:7px 9px;min-height:34px}
+  body.zen-writing-mode #save-post{font-size:11px!important;padding:8px 11px!important}
+}
