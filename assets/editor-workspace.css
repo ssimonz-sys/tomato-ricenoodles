@@ -87,3 +87,20 @@ body:has(#desk-view[hidden]) .studio-focus-fab{display:none}
 
 /* Keep the top-level focus action visually separated from navigation. */
 .desk-actions #studio-header-focus{flex-shrink:0}
+
+
+/* AO3-style chapter drafting inside the existing article placement panel. */
+.studio-chapter-flow{margin:16px 0 0;padding:14px 16px;border:1px solid var(--line,#dedbd2);border-radius:7px;background:var(--sand,#f8f6f1)}
+#place-chapter-flow[hidden],#place-multi-row[hidden],#place-chapter-title-row[hidden],#place-next-section[hidden]{display:none!important}
+#place-multi-row{display:flex;align-items:center;gap:10px;font:600 13px/1.55 var(--sans);color:var(--ink);cursor:pointer;margin:0}
+#place-multi-sections{appearance:auto;display:inline-block;flex:0 0 auto;width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+#place-chapter-title-row{display:block;margin-top:12px;font:600 12px/1.5 var(--sans);color:var(--ink)}
+#place-chapter-title{box-sizing:border-box;display:block;width:100%;margin-top:7px;padding:11px 12px;border:1px solid var(--line,#dedbd2);border-radius:5px;background:var(--white,#fff);color:var(--ink);font:14px/1.5 var(--sans)}
+#place-chapter-note{font:12px/1.65 var(--sans);color:var(--muted);margin:10px 0 0}
+#place-next-section{display:inline-block;margin-top:12px;padding:8px 12px;border:1px solid var(--accent);border-radius:5px;color:var(--accent);background:var(--paper,#fffefa);font:600 12px/1.5 var(--sans);text-decoration:none}
+#place-next-section:hover{background:var(--white,#fff)}
+body.zen-paper-mode #zen-settings #place-multi-row{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important}
+body.zen-paper-mode #zen-settings #place-multi-sections{appearance:auto!important;display:inline-block!important;width:16px!important;height:16px!important;min-width:16px!important;margin:0!important;padding:0!important;accent-color:var(--accent)!important}
+body.zen-paper-mode #zen-settings #place-chapter-title-row[hidden]{display:none!important}
+body.zen-paper-mode #zen-settings #place-multi-row[hidden]{display:none!important}
+html[data-admin-theme="dark"] .studio-chapter-flow{background:var(--paper);border-color:var(--border)}
