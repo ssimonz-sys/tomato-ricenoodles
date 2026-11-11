@@ -12,6 +12,14 @@
   const $=selector=>document.querySelector(selector);
   const moved=[];
   let focused=false,tab='content';
+  const titleInput=form.elements.namedItem('title');
+  const excerptInput=form.elements.namedItem('excerpt');
+  const bodyInput=form.elements.namedItem('body');
+  const originalPlaceholders=[
+    [titleInput,titleInput?.placeholder],
+    [excerptInput,excerptInput?.placeholder],
+    [bodyInput,bodyInput?.placeholder]
+  ];
 
   const create=(tag,className='',label)=>{
     const el=document.createElement(tag);
@@ -167,6 +175,9 @@
     toolbar.hidden=!focused;
     sidebar.hidden=!focused;
     if(focused){
+      if(titleInput)titleInput.placeholder=txt('输入简单明了的标题','Enter a clear, concise title');
+      if(excerptInput)excerptInput.placeholder=txt('摘要，让读者快速掌握主题','A short summary for your readers');
+      if(bodyInput)bodyInput.placeholder=txt('写下你的故事…','Write your story…');
       moveSettings();
       switchTab('content');
       close();
@@ -181,6 +192,9 @@
       document.body.classList.remove('studio-focus-tools-visible');
       form.classList.remove('zen-textarea-fallback');
       restore();
+      for(const [node,placeholder] of originalPlaceholders){
+        if(node)node.placeholder=placeholder||'';
+      }
     }
   }
   window.TRNFocus.subscribe(update);

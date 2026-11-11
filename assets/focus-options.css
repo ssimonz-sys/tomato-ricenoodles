@@ -20,8 +20,8 @@ body.zen-paper-mode #editor>.studio-settings,
 body.zen-paper-mode #editor>.studio-backdrop,
 body.zen-paper-mode #studio-focus-fab,
 body.zen-paper-mode #editor .studio-top-actions,
-body.zen-paper-mode #editor .studio-publication-bar:not(#zen-settings .studio-publication-bar),
-body.zen-paper-mode #editor .studio-placement:not(#zen-settings .studio-placement) {
+body.zen-paper-mode #editor>.studio-publication-bar,
+body.zen-paper-mode #editor>.studio-placement {
   display:none!important;
 }
 /* The moving fields still live inside the original form. */

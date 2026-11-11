@@ -81,7 +81,9 @@
       // so cursor position, undo history and draft autosaving survive.
       requestAnimationFrame(()=>{
         $('#editor')?.scrollIntoView?.({block:'start'});
-        const target=$('#studio-rich-editor .toastui-editor-ww-container [contenteditable="true"]')||
+        const titleField=form.elements.namedItem('title');
+        const target=(!titleField?.value?.trim()?titleField:null)||
+          $('#studio-rich-editor .toastui-editor-ww-container [contenteditable="true"]')||
           $('#studio-rich-editor .toastui-editor-md-container .CodeMirror textarea')||
           $('#content-body');
         if(target&&!target.hidden)target.focus?.({preventScroll:true});
@@ -108,10 +110,14 @@
       toggle();
       return;
     }
-    if(event.key==='Escape'&&active&&!$('#studio-settings')?.classList.contains('open')){
+    if(event.key==='Escape'&&active){
       event.preventDefault();
       event.stopImmediatePropagation?.();
-      set(false);
+      if(window.TRNZenOptions?.isOpen?.()){
+        window.TRNZenOptions.close();
+        return;
+      }
+      if(!$('#studio-settings')?.classList.contains('open'))set(false);
     }
   },true);
 
