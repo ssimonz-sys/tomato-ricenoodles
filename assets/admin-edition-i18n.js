@@ -78,6 +78,7 @@
     '增加段落缩进':'Increase paragraph indent',
     '减少段落缩进':'Decrease paragraph indent',
     '阅读全文预览':'Full preview',
+    '阅读预览':'Reading preview',
     '返回写作':'Back to writing',
     '编辑文章':'Edit post',
     '新建文章':'New post',
