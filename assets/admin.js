@@ -302,7 +302,14 @@
     try{validateEditor();}catch(problem){
       message('#editor-message',problem.message);
       $('#save-status').textContent='发布前请检查填写内容';
-      document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+      // Publishing errors live inside the options panel while focused.
+      // Reveal the real form field and error instead of silently failing.
+      if(window.TRNFocus?.isActive?.()){
+        window.TRNZenOptions?.open?.();
+        window.TRNZenOptions?.selectTab?.('work');
+      }else{
+        document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+      }
       return;
     }
     const f=form.elements,priorKey=draftKey();
@@ -335,7 +342,14 @@
     }catch(problem){
       message('#editor-message','发布或保存失败：'+problem.message);
       $('#save-status').textContent='保存失败，请检查提示';
-      document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+      // Publishing errors live inside the options panel while focused.
+      // Reveal the real form field and error instead of silently failing.
+      if(window.TRNFocus?.isActive?.()){
+        window.TRNZenOptions?.open?.();
+        window.TRNZenOptions?.selectTab?.('work');
+      }else{
+        document.querySelector('#studio-publication-bar')?.scrollIntoView({behavior:'smooth',block:'center'});
+      }
     }finally{$('#save-post').disabled=false;}
   });
   $('#delete-post').addEventListener('click',async()=>{
