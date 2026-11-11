@@ -21,9 +21,8 @@
   let outlineTimer = null;
   let focused = false;
   let legacyLayoutSource='';
+  let legacyVisualSnapshot='';
   const specialLayout=/<span data-trn-(?:align|indent)=/;
-  const visuallyEquivalent=(a,b)=>String(a||'').replace(/<span data-trn-(?:align|indent)="[^"]+"><\/span>/g,'').replace(/\s+/g,' ').trim()===
-    String(b||'').replace(/<span data-trn-(?:align|indent)="[^"]+"><\/span>/g,'').replace(/\s+/g,' ').trim();
   const htmlEscape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   // Move metadata into a drawer while keeping every field inside the existing form.
@@ -220,7 +219,7 @@
     if(!rich)throw Error('所见即所得编辑器加载失败，请刷新页面后再保存。');
     const next=rich.getMarkdown();
     if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
-       !specialLayout.test(next)&&!visuallyEquivalent(legacyLayoutSource,next)){
+       !specialLayout.test(next)&&next!==legacyVisualSnapshot){
       throw Error('此文章含有旧版段落缩进或对齐标记。当前修改会丢失这些格式，暂时禁止覆盖保存，请先备份文章。');
     }
   }
@@ -228,7 +227,7 @@
     if(!rich)return textarea.value;
     const value=rich.getMarkdown();
     if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
-       !specialLayout.test(value)&&visuallyEquivalent(legacyLayoutSource,value))return legacyLayoutSource;
+       !specialLayout.test(value)&&value===legacyVisualSnapshot)return legacyLayoutSource;
     return value;
   }
   function syncEditor(){
@@ -358,7 +357,10 @@
     textarea.value=legacyLayoutSource;
     textarea.hidden=true;
     initRich();
-    if(rich)rich.setMarkdown(legacyLayoutSource,false);
+    if(rich){
+      rich.setMarkdown(legacyLayoutSource,false);
+      legacyVisualSnapshot=rich.getMarkdown();
+    }else legacyVisualSnapshot='';
     if(readingPreview){
       readingPreview=false;
       $('#markdown-preview').hidden=true;
