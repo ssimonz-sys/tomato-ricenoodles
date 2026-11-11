@@ -213,22 +213,21 @@
     if (event.key === 'Escape' && focused && !settings.classList.contains('open')) setFocusMode(false);
   }, true);
 
-  // Store the same Markdown representation for compatibility with existing
-  // published articles. Readers and the database remain unchanged.
-  function validateContent(){
-    if(!rich)throw Error('所见即所得编辑器加载失败，请刷新页面后再保存。');
-    const next=rich.getMarkdown();
-    if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
-       !specialLayout.test(next)&&next!==legacyVisualSnapshot){
-      throw Error('此文章含有旧版段落缩进或对齐标记。当前修改会丢失这些格式，暂时禁止覆盖保存，请先备份文章。');
-    }
-  }
+  // Keep the public Markdown storage format, but repair old inline paragraph
+  // layout tags when text is edited in the WYSIWYG surface. The bridge matches
+  // original and edited paragraphs so insertions do not shift align/indent tags.
   function getMarkdown(){
     if(!rich)return textarea.value;
-    const value=rich.getMarkdown();
-    if(legacyLayoutSource&&specialLayout.test(legacyLayoutSource)&&
-       !specialLayout.test(value)&&value===legacyVisualSnapshot)return legacyLayoutSource;
-    return value;
+    const visual=rich.getMarkdown();
+    if(!specialLayout.test(legacyLayoutSource))return visual;
+    if(visual===legacyVisualSnapshot)return legacyLayoutSource;
+    if(!window.TRNLegacyLayout?.reconcile)throw Error('旧段落格式兼容组件未加载，请刷新后重试。');
+    return window.TRNLegacyLayout.reconcile(legacyLayoutSource,visual);
+  }
+  function validateContent(){
+    if(!rich)throw Error('所见即所得编辑器加载失败，请刷新页面后再保存。');
+    // The reconciliation runs before any cloud save, including autosave.
+    getMarkdown();
   }
   function syncEditor(){
     if(loading||!rich)return;
@@ -368,7 +367,7 @@
     }
     const notice=$('#studio-layout-status');
     if(notice&&rich)notice.textContent=specialLayout.test(legacyLayoutSource)?
-      '这篇旧文章含有特殊段落格式。为防止原文丢失，不兼容的编辑将被阻止保存。':'';
+      '旧版段落缩进与对齐已自动兼容，现在可以直接编辑和保存。':'';
     queueMicrotask(()=>{loading=false;refreshOutline();});
   }
   $('#preview-toggle').textContent='阅读预览';
