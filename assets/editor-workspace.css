@@ -84,3 +84,6 @@ html[data-admin-theme="dark"] .studio-publication-bar,html[data-admin-theme="dar
 .studio-focus-mode .studio-focus-fab{background:var(--paper);color:var(--accent);border-color:var(--accent)}
 body:has(#desk-view[hidden]) .studio-focus-fab{display:none}
 @media(max-width:600px){.studio-focus-fab{right:12px;bottom:12px;padding:9px 13px;font-size:12px}}
+
+/* Keep the top-level focus action visually separated from navigation. */
+.desk-actions #studio-header-focus{flex-shrink:0}

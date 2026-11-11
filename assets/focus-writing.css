@@ -219,3 +219,40 @@ html[data-admin-theme="dark"] .studio-focus-mode #studio-rich-editor .toastui-ed
   font-size:20px;
   line-height:2;
 }
+
+/* Visible top-level focus control in both independent author studios. */
+.studio-header-focus{
+  appearance:none;border:1px solid var(--border);border-radius:7px;
+  background:var(--white);color:var(--olive);
+  font:700 12px/1.4 var(--sans);padding:11px 16px;cursor:pointer;
+  white-space:nowrap;
+}
+.studio-header-focus:hover,.studio-header-focus:focus-visible{
+  border-color:var(--accent);color:var(--accent);
+}
+body:has(#editor[hidden]) :is(#studio-header-focus,#studio-focus-fab),
+body:has(#desk-view[hidden]) :is(#studio-header-focus,#studio-focus-fab){
+  display:none!important;
+}
+/* Metadata and placement stay out of the writing canvas until focus ends. */
+.studio-focus-mode .studio-publication-bar,
+.studio-focus-mode .studio-placement,
+.studio-focus-mode .studio-paper .studio-layout-status {
+  display:none!important;
+}
+/* Keep editor, save action and exit visible; never hide the form itself. */
+.studio-focus-mode .studio-focus-fab{
+  z-index:50;
+  position:fixed;
+  display:inline-flex!important;
+  align-items:center;
+}
+.studio-focus-mode .studio-paper input[name="title"]{
+  max-width:100%;
+}
+html[data-admin-theme="dark"] .studio-header-focus{
+  background:var(--white);color:var(--ink);border-color:var(--border);
+}
+@media(max-width:650px){
+  .studio-header-focus{font-size:11px;padding:8px 10px;}
+}

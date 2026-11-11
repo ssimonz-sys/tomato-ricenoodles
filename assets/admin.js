@@ -240,6 +240,7 @@
     clearTimeout(autoTimer);
     const p=state.posts.find(post=>post.id===id)||null;
     state.editing=p?.id||null;state.dirty=false;state.preview=false;state.version=0;
+    window.TRNStudio?.exitFocus?.();
     $('#editor-empty').hidden=true;form.hidden=false;$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
     for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');

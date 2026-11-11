@@ -157,6 +157,11 @@
     document.body.classList.remove('studio-focus-tools-visible');
     $('#studio-focus').textContent = next ? '退出专注' : '专注写作';
     $('#studio-focus').setAttribute('aria-pressed', String(next));
+    if(headerFocus){
+      headerFocus.textContent=next?'退出专注':'专注写作';
+      headerFocus.setAttribute('aria-pressed',String(next));
+      headerFocus.setAttribute('title',next?'退出专注写作':'进入专注写作');
+    }
     focusFab.textContent=next?'退出专注':'专注写作';
     focusFab.title=next?'退出专注模式':'进入专注写作';
     focusFab.setAttribute('aria-pressed',String(next));
@@ -164,7 +169,8 @@
     focusFormatting.textContent = '显示排版工具';
     focusFormatting.setAttribute('aria-pressed', 'false');
     if (next) {
-      // The rich editor is kept mounted, so content, selection and undo history survive.
+      closeSettings();
+      // The rich editor stays mounted, keeping the draft, cursor and undo history.
       requestAnimationFrame(() => {
         const target = richMount.querySelector('.toastui-editor-ww-container [contenteditable="true"]')
           || richMount.querySelector('.toastui-editor-md-container .CodeMirror textarea')
@@ -174,6 +180,11 @@
     }
   }
   $('#studio-focus').addEventListener('click', () => setFocusMode(!focused));
+  const headerFocus=$('#studio-header-focus');
+  if(headerFocus){
+    headerFocus.addEventListener('click',()=>setFocusMode(!focused));
+    headerFocus.setAttribute('aria-pressed','false');
+  }
   const focusFab=document.createElement('button');
   focusFab.type='button';focusFab.id='studio-focus-fab';
   focusFab.className='studio-focus-fab';
@@ -189,6 +200,14 @@
     focusFormatting.setAttribute('aria-pressed', String(visible));
   });
   document.addEventListener('keydown', event => {
+    // Alt + Shift + F toggles focus without touching the document.
+    if(event.altKey&&event.shiftKey&&event.key.toLowerCase()==='f'&&!event.metaKey&&!event.ctrlKey){
+      if(!form.hidden&&$('#desk-view')?.hidden===false){
+        event.preventDefault();
+        setFocusMode(!focused);
+      }
+      return;
+    }
     // Capturing before the settings drawer's own Escape handler avoids exiting
     // focus mode on the same keypress that merely closes the drawer.
     if (event.key === 'Escape' && focused && !settings.classList.contains('open')) setFocusMode(false);
@@ -474,6 +493,10 @@
       $('#preview-toggle').textContent = '阅读全文预览';
     }
   }, true);
-  window.TRNStudio = {load, getMarkdown, refreshOutline};
+  window.TRNStudio = {load, getMarkdown, refreshOutline,
+    toggleFocus:()=>setFocusMode(!focused),
+    exitFocus:()=>{if(focused)setFocusMode(false);},
+    isFocused:()=>focused
+  };
   refreshOutline();
 })();
