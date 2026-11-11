@@ -1,0 +1,127 @@
+/* Independent focus mode: intentionally loaded after other author styles.
+   One body class is responsible for a visibly different, calm writing canvas. */
+body.studio-focus-mode {
+  background: #fffefa !important;
+}
+body.studio-focus-mode .desk-header,
+body.studio-focus-mode .desk-title,
+body.studio-focus-mode .draft-list,
+body.studio-focus-mode .studio-outline,
+body.studio-focus-mode .studio-heading-guide,
+body.studio-focus-mode .studio-editor-hint,
+body.studio-focus-mode .studio-paper-info,
+body.studio-focus-mode .studio-paper .body-top,
+body.studio-focus-mode .studio-publication-bar,
+body.studio-focus-mode .studio-placement,
+body.studio-focus-mode .studio-layout-status,
+body.studio-focus-mode #studio-layout-status,
+body.studio-focus-mode .editor-bottom,
+body.studio-focus-mode .pair-help,
+body.studio-focus-mode .studio-settings,
+body.studio-focus-mode .studio-backdrop {
+  display:none!important;
+}
+body.studio-focus-mode #desk-view,
+body.studio-focus-mode .desk-container,
+body.studio-focus-mode .desk-grid,
+body.studio-focus-mode .studio-layout,
+body.studio-focus-mode .edit-panel {
+  width:100%!important;
+  max-width:none!important;
+  min-width:0;
+  margin:0!important;
+}
+body.studio-focus-mode .desk-container {
+  padding:0!important;
+}
+body.studio-focus-mode .desk-grid,
+body.studio-focus-mode .studio-layout {
+  display:block!important;
+  grid-template-columns:minmax(0,1fr)!important;
+}
+body.studio-focus-mode .edit-panel {
+  display:block!important;
+  min-height:100vh!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.studio-focus-mode .edit-panel form {
+  padding:0!important;
+}
+body.studio-focus-mode .studio-paper {
+  width:min(100%,860px)!important;
+  max-width:860px!important;
+  margin:0 auto!important;
+  padding:clamp(42px,7vh,88px) clamp(20px,5vw,68px) 130px!important;
+  background:transparent!important;
+}
+body.studio-focus-mode .form-top {
+  position:sticky!important;
+  z-index:25!important;
+  top:0!important;
+  width:100%!important;
+  padding:12px clamp(18px,4vw,50px)!important;
+  background:#fffefa!important;
+  border-bottom:1px solid rgba(52,56,48,.10)!important;
+  border-radius:0!important;
+}
+body.studio-focus-mode .form-top .eyebrow,
+body.studio-focus-mode #delete-post {
+  display:none!important;
+}
+body.studio-focus-mode #studio-rich-editor,
+body.studio-focus-mode #studio-rich-editor .toastui-editor-defaultUI {
+  margin:0!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+body.studio-focus-mode #studio-rich-editor .toastui-editor-defaultUI {
+  min-height:70vh!important;
+  height:max(70vh,630px)!important;
+}
+body.studio-focus-mode #studio-rich-editor .toastui-editor-toolbar,
+body.studio-focus-mode #studio-rich-editor .toastui-editor-mode-switch {
+  display:none!important;
+}
+body.studio-focus-mode.studio-focus-tools-visible #studio-rich-editor .toastui-editor-toolbar,
+body.studio-focus-mode.studio-focus-tools-visible #studio-rich-editor .toastui-editor-mode-switch {
+  display:flex!important;
+}
+body.studio-focus-mode #studio-focus-fab {
+  display:inline-flex!important;
+  position:fixed!important;
+  z-index:60!important;
+  bottom:24px!important;
+  right:24px!important;
+  align-items:center;
+  justify-content:center;
+}
+body.studio-focus-mode #studio-focus {
+  color:var(--accent)!important;
+}
+html[data-admin-theme="dark"] body.studio-focus-mode {
+  background:#1b241e!important;
+}
+html[data-admin-theme="dark"] body.studio-focus-mode .form-top {
+  background:#1b241e!important;
+  border-bottom-color:rgba(220,230,221,.12)!important;
+}
+html[data-admin-theme="dark"] body.studio-focus-mode .studio-paper,
+html[data-admin-theme="dark"] body.studio-focus-mode .edit-panel,
+html[data-admin-theme="dark"] body.studio-focus-mode #studio-rich-editor .toastui-editor-defaultUI {
+  background:transparent!important;
+}
+@media(max-width:650px){
+  body.studio-focus-mode .studio-paper{
+    padding:30px 18px 90px!important;
+  }
+  body.studio-focus-mode .form-top{
+    padding:10px 12px!important;
+  }
+  body.studio-focus-mode #studio-focus-fab{
+    right:12px!important;bottom:12px!important;
+  }
+}
