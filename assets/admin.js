@@ -8,6 +8,34 @@
   // Browser validation used to silently stop submit for hidden required fields.
   // Validate explicitly, report useful errors, and always allow submit handler.
   form.noValidate=true;
+  // Focus mode moves existing inputs between panels. Resolve by name, and
+  // restore form association when an input lives outside the form.
+  // Optional fields may be missing in a partly cached older editor build.
+  const optionalFields=new Set(['type','slug','excerpt','cover_url','tags','collection_slugs']);
+  function editorField(name){
+    let field=form.elements.namedItem(name)||form.querySelector('[name="'+name+'"]');
+    if(!field){
+      const outside=document.querySelector('[name="'+name+'"]');
+      if(outside){
+        outside.setAttribute('form',form.id);
+        field=outside;
+      }
+    }
+    if(!field&&optionalFields.has(name)){
+      field=document.createElement('input');
+      field.type='hidden';
+      field.name=name;
+      field.dataset.trnRecovered='1';
+      form.append(field);
+      console.warn('Restored missing optional editor field:',name);
+    }
+    if(!field)throw Error('写作表单缺少「'+name+'」字段，请强制刷新页面。');
+    return field;
+  }
+  function repairEditorFields(){
+    for(const name of ['language','type','slug','title','excerpt','cover_url','body','tags','collection_slugs','status'])
+      editorField(name);
+  }
   // Authentication must be wired before optional editor components initialize.
   // A component error must never turn login into a native browser form refresh.
   let placement=null,editorIntegrationsReady=false,editorInitError='';
@@ -106,10 +134,13 @@
   function renderList(){ /* All post management lives at /admin/manage/. */ }
   function draftKey(id=state.editing){return 'trn-backup:'+ (id||('new-'+(pendingChapter||requestedLanguage)));}
   function collect(){
-    const f=form.elements;
-    return {language:edition||f.language.value,type:f.type.value,title:f.title.value,slug:f.slug.value,
-      excerpt:f.excerpt.value,cover_url:f.cover_url.value,body:window.TRNStudio?.getMarkdown()??f.body.value,
-      tags:f.tags.value,collection_slugs:f.collection_slugs.value,status:f.status.value};
+    repairEditorFields();
+    return {language:edition||editorField('language').value,type:editorField('type').value,
+      title:editorField('title').value,slug:editorField('slug').value,
+      excerpt:editorField('excerpt').value,cover_url:editorField('cover_url').value,
+      body:window.TRNStudio?.getMarkdown()??editorField('body').value,
+      tags:editorField('tags').value,collection_slugs:editorField('collection_slugs').value,
+      status:editorField('status').value};
   }
   function backup(){
     if(form.hidden)return;
@@ -238,14 +269,17 @@
   function canChange(){return !state.dirty||confirm('当前修改尚未保存，确定放弃修改吗？');}
   function edit(id=null){
     clearTimeout(autoTimer);
+    repairEditorFields();
     const p=state.posts.find(post=>post.id===id)||null;
     state.editing=p?.id||null;state.dirty=false;state.preview=false;state.version=0;
     window.TRNStudio?.exitFocus?.();
     $('#editor-empty').hidden=true;form.hidden=false;window.TRNFocus?.refresh?.();$('#markdown-preview').hidden=true;$('#content-body').hidden=false;$('#preview-toggle').textContent='预览';
     form.reset();
-    for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])form.elements[name].value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
+    for(const name of ['language','type','slug','title','excerpt','cover_url','body','collection_slugs','status'])
+      editorField(name).value=p?.[name]??({language:requestedLanguage,type:'essay',status:'draft'}[name]||'');
     if(edition)form.elements.language.value=edition;
-    form.elements.tags.value=p?.tags?.join(', ')||'';form.elements.collection_slugs.value=p?.collection_slugs?.join(', ')||'';
+    editorField('tags').value=Array.isArray(p?.tags)?p.tags.join(', '):String(p?.tags||'');
+    editorField('collection_slugs').value=Array.isArray(p?.collection_slugs)?p.collection_slugs.join(', '):String(p?.collection_slugs||'');
     window.TRNStudio?.load(p?.body||'');
     placement?.load(p,{pendingChapter,pendingBook});
     $('#edit-label').textContent=p?'编辑文章':'新建文章';
