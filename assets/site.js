@@ -4,6 +4,28 @@
   const page=body.dataset.page, root=`/${lang}/`, cfg=window.TRN||{penName:'Tomato Ricenoodles',penNameZh:'番茄米线',links:{},collections:{en:[],zh:[]}};
   const qs=new URLSearchParams(location.search), demo=qs.get('demo')==='1', sampleSuffix=demo?'?demo=1':'';
   const collections=[...(cfg.collections?.[lang]||[])];
+  let publicHierarchy=null;
+  async function loadCollectionCounts(){
+    if(demo)return;
+    try{
+      const response=await fetch('/api/hierarchy?lang='+lang,{headers:{Accept:'application/json'}});
+      if(!response.ok)throw Error('HTTP '+response.status);
+      const data=await response.json();
+      if(data.enabled && Array.isArray(data.books)&&Array.isArray(data.chapters))publicHierarchy=data;
+    }catch(error){console.warn('Published series hierarchy counts unavailable.',error);}
+  }
+  function collectionTotals(slug,posts){
+    const standalone=posts.filter(p=>(p.collection_slugs||[]).includes(slug)).length;
+    if(!publicHierarchy)return {standalone,books:0,chapters:0,label:null};
+    const books=publicHierarchy.books.filter(b=>b.series_slug===slug);
+    const ids=new Set(books.map(b=>b.id));
+    const chapters=publicHierarchy.chapters.filter(ch=>ids.has(ch.book_id)).length;
+    const parts=[];
+    if(books.length)parts.push(zh?books.length+' 本书':books.length+' book'+(books.length===1?'':'s'));
+    if(chapters)parts.push(zh?chapters+' 章':chapters+' chapter'+(chapters===1?'':'s'));
+    if(standalone)parts.push(zh?standalone+' 篇文章':standalone+' piece'+(standalone===1?'':'s'));
+    return {standalone,books:books.length,chapters,label:parts.join(' · ')};
+  }
   const $=s=>d.querySelector(s), escape=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const u=zh?{
     home:'首页',essay:'政论与随笔',fiction:'小说',poetry:'诗歌',note:'杂记',collections:'专题文集',about:'关于作者',all:'全部',reading:'分钟阅读',empty:'作品正在整理，文章发表后会出现在这里。',error:'暂时无法加载文章。',demo:'设计预览 · 以下文章是版式占位示例',count:n=>`共 ${n} 篇`,type:{essay:'政论随笔',fiction:'小说',poetry:'诗歌',note:'杂记'},noCollection:'这个专题还没有发布的文章。',back:'返回目录',night:'切换深色模式'
@@ -37,7 +59,7 @@
     {id:'sample-3',slug:'sample-english-poetry',type:'poetry',title:'A Page Reserved for Poetry',excerpt:'Poems can live here without being folded into essays or longer fiction.',collection_slugs:[],published_at:'2026-10-02T12:00:00Z',word_count:160,tags:['Poetry']}
   ];
   async function getPosts(){if(demo)return previewPosts;const r=await fetch(`/api/posts?lang=${lang}`,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('API '+r.status);return (await r.json()).posts||[];}
-  function card(c,posts){const count=posts.filter(p=>(p.collection_slugs||[]).includes(c.slug)).length;const symbol={copper:'↗',sage:'◌',ink:'§',stone:'文',blue:'✦'}[c.theme]||'✳';const art=artUrl(c);return `<a class="collection-card" href="${colRoute(c.slug)}"><div class="cover ${escape(c.theme)} ${art?'has-art':''}">${art?`<img src="${art}" alt="" loading="lazy" decoding="async">`:''}<span class="cover-label">${zh?'专题文集':'THE COLLECTION'}</span><span class="cover-ornament" aria-hidden="true">${symbol}</span><span class="cover-mark" aria-hidden="true">${String(count).padStart(2,'0')}</span></div><div class="collection-info"><strong>${escape(c.title)}</strong><p>${escape(c.description||'')}</p><small>${count} ${zh?'篇文章':'PIECES'} &nbsp; ↗</small></div></a>`;}
+  function card(c,posts){const totals=collectionTotals(c.slug,posts);const count=totals.chapters||totals.standalone;const countLabel=totals.label||(totals.standalone+' '+(zh?'篇文章':'PIECES'));const symbol={copper:'↗',sage:'◌',ink:'§',stone:'文',blue:'✦'}[c.theme]||'✳';const art=artUrl(c);return `<a class="collection-card" href="${colRoute(c.slug)}"><div class="cover ${escape(c.theme)} ${art?'has-art':''}">${art?`<img src="${art}" alt="" loading="lazy" decoding="async">`:''}<span class="cover-label">${zh?'专题文集':'THE COLLECTION'}</span><span class="cover-ornament" aria-hidden="true">${symbol}</span><span class="cover-mark" aria-hidden="true">${String(count).padStart(2,'0')}</span></div><div class="collection-info"><strong>${escape(c.title)}</strong><p>${escape(c.description||'')}</p><small>${escape(countLabel)} &nbsp; ↗</small></div></a>`;}
   const fallbackCover={en:{essay:'/assets/graphics/en-basic-human-science.svg',fiction:'/assets/graphics/en-organziology.svg',poetry:'/assets/graphics/en-on-ethics.svg',note:'/assets/graphics/en-hero.svg'},zh:{essay:'/assets/graphics/zh-basic-humanities.svg',fiction:'/assets/graphics/zh-short-fiction.svg',poetry:'/assets/graphics/zh-poems.svg',note:'/assets/graphics/zh-on-morality.svg'}};
   function coverFor(p){const url=p.cover_url||'';return /^(?:https:\/\/[^\s<>"']+|\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)|\/media\/covers\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif))$/i.test(url)?url:fallbackCover[lang][p.type]||fallbackCover[lang].essay;}
   function listing(p){const minutes=Math.max(1,Math.ceil(Number(p.word_count||1)/(zh?360:230)));return `<a class="post-card has-thumb" href="${postRoute(p)}"><div class="post-copy"><div class="post-meta"><span>${escape(u.type[p.type]||p.type)}</span><span>${escape(displayDate(p.published_at))}</span><span>${minutes} ${u.reading}</span><span>${zh?'阅读':'Reads'} ${Number(p.views||0).toLocaleString()}</span><span>♥ ${Number(p.likes||0).toLocaleString()}</span></div><h3>${escape(p.title)}</h3><p>${escape(p.excerpt||'')}</p><span class="post-arrow" aria-hidden="true">↗</span></div><img class="post-thumb" src="${escape(coverFor(p))}" alt="" loading="lazy" decoding="async"></a>`;}
@@ -54,8 +76,8 @@
   async function collectionPage(){let posts=[];try{posts=await getPosts();}catch{}const slug=qs.get('slug'),detail=slug?collections.find(c=>c.slug===slug):null;
     if(!detail){const dir=$('#collection-directory');if(dir)dir.innerHTML=collections.map(c=>card(c,posts)).join('');return;}
     const rootNode=$('#collection-page');if(!rootNode)return;d.title=`${detail.title} | ${zh?'番茄米线':'Tomato Ricenoodles'}`;
-    const own=posts.filter(p=>(p.collection_slugs||[]).includes(slug));
-    rootNode.innerHTML=`<section class="collection-landing wrapper"><div class="collection-landing-header"><div class="cover ${escape(detail.theme)} ${artUrl(detail)?'has-art':''}">${artUrl(detail)?`<img src="${artUrl(detail)}" alt="" decoding="async">`:''}<span class="cover-label">${zh?'专题文集':'COLLECTION'}</span><span class="cover-ornament">✳</span></div><div><a href="${route('collections.html')}" class="back-link">← ${u.collections}</a><h1>${escape(detail.title)}</h1><p>${escape(detail.description)}</p><span class="eyebrow">${u.count(own.length)}</span></div></div><div class="section-rule"><h2>${zh?'文集目录':'Inside this collection'}</h2></div><div class="post-list">${own.length?own.map(listing).join(''):`<div class="empty-state">${u.noCollection}</div>`}</div></section>`;
+    const own=posts.filter(p=>(p.collection_slugs||[]).includes(slug));const totals=collectionTotals(slug,posts);const displayCount=totals.label||u.count(own.length);
+    rootNode.innerHTML=`<section class="collection-landing wrapper"><div class="collection-landing-header"><div class="cover ${escape(detail.theme)} ${artUrl(detail)?'has-art':''}">${artUrl(detail)?`<img src="${artUrl(detail)}" alt="" decoding="async">`:''}<span class="cover-label">${zh?'专题文集':'COLLECTION'}</span><span class="cover-ornament">✳</span></div><div><a href="${route('collections.html')}" class="back-link">← ${u.collections}</a><h1>${escape(detail.title)}</h1><p>${escape(detail.description)}</p><span class="eyebrow">${escape(displayCount)}</span></div></div><div class="section-rule"><h2>${zh?'文集目录':'Inside this collection'}</h2></div><div class="post-list">${own.length?own.map(listing).join(''):(totals.books?'':`<div class="empty-state">${u.noCollection}</div>`)}</div></section>`;
   }
   function safeMarkdown(raw){if(window.marked&&window.DOMPurify){const html=window.TRNReadingLayout?.render(raw||'',window.marked,window.DOMPurify)??window.DOMPurify.sanitize(window.marked.parse(raw||'',{gfm:true,breaks:true}),{USE_PROFILES:{html:true}});const temp=d.createElement('div');temp.innerHTML=html;temp.querySelectorAll('a').forEach(a=>{const href=a.getAttribute('href')||'';if(!/^https?:\/\//i.test(href))a.removeAttribute('href');else{a.target='_blank';a.rel='noopener noreferrer';}});return temp.innerHTML;}
     return String(raw||'').split(/\n\s*\n/).map(par=>`<p>${escape(par).replace(/\n/g,'<br>')}</p>`).join('');}
@@ -98,6 +120,7 @@
         }
       }catch(error){console.warn('Series list unavailable; using site defaults.',error);}
     }
+    if(page==='home'||page==='collections')await loadCollectionCounts();
     if(page==='home')await home();else if(page==='collections')await collectionPage();else if(page==='read')await readPage();
   }
   boot();
