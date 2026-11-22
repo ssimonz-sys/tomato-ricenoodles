@@ -13,7 +13,7 @@ async function submit(data){
  if(!response.ok)throw Error(json.error||'HTTP '+response.status);
  return json;
 }
-function notify(text){const el=document.querySelector('#trn-interaction-status');if(el)el.textContent=text;}
+function notify(text){const el=document.querySelector('#trn-interaction-status');if(el)el.textContent=text;const inline=document.querySelector('#trn-comment-feedback');if(inline)inline.textContent=text;}
 function paintCounts(data){
  for(const [key,id] of [['views','#trn-count-views'],['likes','#trn-count-likes']]){
   const el=document.querySelector(id);if(el)el.textContent=Number(data[key]||0).toLocaleString();
@@ -55,7 +55,7 @@ async function mount(article){
  card.setAttribute('aria-label',label.comments);
  card.innerHTML='<div class="trn-engagement-bar"><div class="trn-engagement-count"><strong id="trn-count-views">0</strong><small>'+label.views+'</small></div><div class="trn-engagement-count"><strong id="trn-count-likes">0</strong><small>'+label.likes+'</small></div><div class="trn-engagement-actions"><button id="trn-like" type="button" disabled>'+label.like+'</button><button id="trn-share" type="button">'+label.share+'</button></div></div>'+
  '<p class="trn-interaction-status" id="trn-interaction-status" role="status"></p>'+
- '<div class="trn-comments"><h2>'+label.comments+'</h2><div id="trn-comments-list"></div><form id="trn-comment-form"><label for="trn-comment-body">'+(zh?'匿名留言':'Anonymous comment')+'</label><textarea id="trn-comment-body" rows="4" maxlength="1000" minlength="2" required placeholder="'+label.placeholder+'"></textarea><label class="trn-honey" aria-hidden="true">Website <input type="text" name="website" autocomplete="off" tabindex="-1"></label><div class="trn-comment-actions"><small>'+(zh?'无需注册，评论经作者审核后公开。':'No account needed. Comments appear after approval.')+'</small><button type="submit">'+label.send+'</button></div></form></div>';
+ '<div class="trn-comments"><h2>'+label.comments+'</h2><p class="trn-comment-note">'+(zh?'无需登录，所有留言统一以「读者评论」展示。评论经作者审核后公开，暂不支持回复。':'No sign-in needed. Comments are displayed anonymously after author approval. Replies are not supported.')+'</p><div id="trn-comments-list"></div><form id="trn-comment-form"><label for="trn-comment-body">'+(zh?'匿名留言':'Anonymous comment')+'</label><textarea id="trn-comment-body" rows="4" maxlength="1000" minlength="2" required placeholder="'+label.placeholder+'"></textarea><label class="trn-honey" aria-hidden="true">Website <input type="text" name="website" autocomplete="off" tabindex="-1"></label><div class="trn-comment-actions"><small>'+(zh?'无需注册，评论经作者审核后公开。':'No account needed. Comments appear after approval.')+'</small><button type="submit">'+label.send+'</button></div><p class="trn-comment-feedback" id="trn-comment-feedback" role="status" aria-live="polite"></p></form></div>';
  root.after(card);
  card.querySelector('#trn-share').addEventListener('click',share);
  const form=card.querySelector('#trn-comment-form');
