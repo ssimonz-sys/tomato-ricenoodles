@@ -1,15 +1,22 @@
 import {error,parseJson,sameOrigin} from '../../lib/common.js';
-import {active,article,ensureCount,sha,visitor,withReader,unavailable} from '../../lib/engagement.js';
+import {active,article,ensureCount,initialize,sha,visitor,withReader,unavailable} from '../../lib/engagement.js';
 const slugLang=request=>{
  const u=new URL(request.url);
  return {language:u.searchParams.get('lang')||'zh',slug:u.searchParams.get('slug')||''};
 };
 async function prepare(context){
  if(!context.env.DB)return {failed:error('Database is not configured.',503)};
- if(!await active(context.env.DB))return {failed:unavailable()};
  const {language,slug}=slugLang(context.request);
  const p=await article(context,slug,language);
  if(!p)return {failed:error('Article not found.',404)};
+ // The public reader can bootstrap its own optional engagement tables after
+ // verifying the requested published article, as in literary-archive.
+ // Existing rows are preserved; each statement is CREATE ... IF NOT EXISTS.
+ if(!await active(context.env.DB)){
+   try{await initialize(context.env.DB);}
+   catch(e){console.error('Unable to initialize reader engagement:',e);return {failed:unavailable()};}
+ }
+ if(!await active(context.env.DB))return {failed:unavailable()};
  const identity=await visitor(context.request);
  return {p,identity};
 }
