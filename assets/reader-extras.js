@@ -51,7 +51,16 @@
     ]);
     if(requests[0].status==='fulfilled'&&requests[0].value.enabled)hierarchy=requests[0].value;
     if(requests[1].status==='fulfilled')posts=requests[1].value.posts||[];
-    let sequence=[],back=home,prevHeading=ui.previousPost,nextHeading=ui.nextPost;
+    // Standalone pieces return to their published collection; otherwise to the collections index.
+    const availableCollections=[
+      ...(hierarchy?.series||[]),
+      ...(window.TRN?.collections?.[lang]||[])
+    ];
+    const seriesSlug=(Array.isArray(post.collection_slugs)?post.collection_slugs:[])
+      .find(slug=>availableCollections.some(c=>c.slug===slug));
+    let sequence=[],back=seriesSlug
+      ?'/'+lang+'/collections.html?slug='+encodeURIComponent(seriesSlug)
+      :'/'+lang+'/collections.html',prevHeading=ui.previousPost,nextHeading=ui.nextPost;
     const section=(hierarchy?.sections||[]).find(s=>s.slug===post.slug);
     if(section){
       const chapter=(hierarchy.chapters||[]).find(c=>c.id===section.chapter_id);
@@ -85,6 +94,11 @@
       prev?cell(urlFor(prev.slug),'‹ '+prevHeading,prev.title):cell(back,'‹ '+ui.contents,'',true),
       next?cell(urlFor(next.slug),nextHeading+' ›',next.title):cell(back,ui.last,'',true)
     );
+    const returnLink=d.createElement('a');
+    returnLink.className='trn-pager-return';
+    returnLink.href=back;
+    returnLink.textContent=ui.contents;
+    pager.append(returnLink);
     const engagement=d.getElementById('trn-reader-engagement');
     const root=d.getElementById('post-detail');
     if(engagement)engagement.before(pager);
