@@ -29,9 +29,12 @@ function bookCard(b){
  const cover=/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(svg|png|jpe?g|webp|gif)$/i.test(b.cover_url||'')||/^\/media\/covers\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/i.test(b.cover_url||'')||/^https:\/\/[^\s<>"']+$/i.test(b.cover_url||'')?b.cover_url:art||'/assets/graphics/'+(zh?'zh-basic-humanities.svg':'en-basic-human-science.svg');
  return '<a class="hier-book-card" href="'+bookUrl(b.id)+'"><img src="'+esc(cover)+'" alt="" loading="lazy"><span><strong>'+esc(b.title)+'</strong><small>'+esc(b.description||'')+'</small><em>'+chapterCount+' '+(zh?'章':'chapters')+' ↗</em></span></a>';
 }
-function chapterEntry(ch,i){
+function chapterEntry(ch,i,allChapters){
  const secs=sectionFor(ch.id);
- const label=zh?'第 '+(i+1)+' 章':'CHAPTER '+(i+1);
+ const isFrontOrBackMatter=title=>/^(preface|foreword|afterword|前言|后记)$/i.test(String(title||'').trim());
+ const special=isFrontOrBackMatter(ch.title);
+ const mainNumber=allChapters.slice(0,i+1).filter(item=>!isFrontOrBackMatter(item.title)).length;
+ const label=special?(zh?ch.title:ch.title.toUpperCase()):(zh?'第 '+mainNumber+' 章':'CHAPTER '+mainNumber);
  const summary='<span class="hier-chapter-index">'+esc(label)+'</span><span class="hier-chapter-copy"><strong>'+esc(ch.title)+'</strong>'+(ch.description?'<small>'+esc(ch.description)+'</small>':'')+'</span>';
  const chapterId='chapter-'+encodeURIComponent(ch.id);
  if(secs.length===1){
