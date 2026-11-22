@@ -14,7 +14,7 @@ const seriesUrl=slug=>route('collections.html?slug='+encodeURIComponent(slug));
 let content=null;
 const bookBy=id=>content.books.find(b=>b.id===id);
 const chapterBy=id=>content.chapters.find(c=>c.id===id);
-const sectionFor=id=>content.sections.filter(s=>s.chapter_id===id).sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.post_id).localeCompare(String(b.post_id)));
+const sectionFor=id=>content.sections.filter(s=>s.chapter_id===id).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)||String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.post_id).localeCompare(String(b.post_id)));
 const seriesFor=slug=>(content?.series||window.TRN?.collections?.[lang]||[]).find(c=>c.slug===slug);
 function title(t,defaultText){d.title=(t||defaultText)+' | '+(zh?'番茄米线':'Tomato Ricenoodles');}
 function breadcrumb(links){
@@ -54,7 +54,7 @@ function showBook(){
  const trail=[[zh?'系列文集':'Collections',route('collections.html')]];
  if(series)trail.push([series.title,seriesUrl(series.slug)]);
  trail.push([book.title,null]);
- const chapters=content.chapters.filter(ch=>ch.book_id===book.id);
+ const chapters=content.chapters.filter(ch=>ch.book_id===book.id).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)||String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id)));
  root.innerHTML=breadcrumb(trail)+'<div class="hier-hero"><div class="hier-eyebrow">'+(zh?'书籍':'THE BOOK')+'</div><h1>'+esc(book.title)+'</h1><p>'+esc(book.description||'')+'</p></div><div class="hier-section-heading"><h2>'+(zh?'全书目录':'Contents')+'</h2><span>'+chapters.length+' '+(zh?'章':'chapters')+'</span></div><div id="hier-chapter-list" class="hier-chapter-stack">'+(chapters.length?chapters.map(chapterEntry).join(''):'<p class="hier-empty">'+(zh?'本书尚未公开章节。':'No published chapters yet.')+'</p>')+'</div>';
  root.querySelectorAll('.hier-chapter-toggle').forEach(button=>{
    button.addEventListener('click',()=>{
