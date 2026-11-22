@@ -1,0 +1,27 @@
+/* Chapter/article paging, sharing and sticky reader controls. */
+.trn-reader-pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;border-top:1px solid var(--line);margin:44px 0 0;padding:23px 0 4px}
+.trn-pager-link{box-sizing:border-box;min-height:68px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:7px;padding:13px 18px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-decoration:none;transition:border-color .18s,background .18s}
+.trn-pager-heading{font:500 13px/1.5 var(--sans);color:var(--ink)}
+.trn-pager-link small{max-width:100%;font:12px/1.5 var(--serif);color:var(--muted);overflow-wrap:anywhere}
+.trn-pager-link:hover,.trn-pager-link:focus-visible{border-color:var(--accent);background:var(--sand);text-decoration:none}
+.trn-pager-contents .trn-pager-heading{color:var(--muted)}
+.trn-floating-tools{position:fixed;top:35%;right:clamp(10px,2.1vw,30px);z-index:80;display:flex;flex-direction:column;align-items:center;gap:3px;width:55px;padding:10px 4px 8px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:28px;box-shadow:0 9px 28px rgba(39,31,24,.075)}
+.trn-floating-tools button{width:44px;min-height:43px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;border:0;border-radius:24px;background:transparent;color:var(--ink);cursor:pointer;font:23px/1.1 Georgia,serif}
+.trn-floating-tools button:hover,.trn-floating-tools button:focus-visible{background:var(--sand);color:var(--accent)}
+.trn-floating-tools button:focus-visible,.trn-share-option:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.trn-floating-tools button:disabled{opacity:.48;cursor:default}
+.trn-floating-tools button[aria-pressed="true"] .trn-float-heart{color:var(--accent)}
+.trn-floating-tools small{font:10px/1.3 var(--sans);color:var(--muted)}
+.trn-float-caption{margin-top:5px;white-space:nowrap;font:10px/1.45 var(--sans);color:var(--muted)}
+.trn-share-menu{position:fixed;z-index:100;box-sizing:border-box;width:240px;max-width:calc(100vw - 24px);padding:13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(34,30,25,.18);color:var(--ink)}
+.trn-share-menu>strong{display:block;font:600 13px/1.4 var(--sans);padding:5px 10px 11px}
+.trn-share-option{display:block;box-sizing:border-box;width:100%;border:0;border-radius:7px;background:transparent;padding:11px 10px;text-align:left;color:var(--ink);text-decoration:none;font:13px/1.4 var(--sans);cursor:pointer}
+.trn-share-option:hover,.trn-share-option:focus-visible{background:var(--sand);color:var(--accent);text-decoration:none}
+.trn-share-toast{position:fixed;z-index:110;right:25px;bottom:24px;max-width:300px;background:var(--ink);color:var(--paper);border-radius:7px;padding:10px 14px;font:12px/1.5 var(--sans);box-shadow:0 12px 30px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .2s}
+.trn-share-toast.is-visible{opacity:1}
+@media(max-width:1120px){.trn-floating-tools{top:auto;right:16px;bottom:14px;width:auto;flex-direction:row;gap:2px;padding:4px 7px;border-radius:30px}.trn-floating-tools button{width:40px;min-height:40px;font-size:21px}.trn-float-caption{display:none}.trn-share-toast{right:16px;bottom:76px}}
+@media(max-width:550px){.trn-reader-pager{gap:7px;margin-top:30px;padding-top:16px}.trn-pager-link{min-height:74px;padding:10px 9px}.trn-pager-heading{font-size:12px}.trn-pager-link small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.trn-pager-link,.trn-share-toast{transition:none}}
+
+.trn-comment-note{margin:0 0 19px;color:var(--muted);font:12px/1.85 var(--sans)}
+.trn-comment-feedback{min-height:1em;margin:10px 0 0;color:var(--accent);font:12px/1.6 var(--sans)}
