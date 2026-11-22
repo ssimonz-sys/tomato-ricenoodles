@@ -38,6 +38,7 @@ function comments(list){
  }
 }
 async function share(){
+ if(window.TRNReaderExtras?.share){window.TRNReaderExtras.share(document.getElementById('trn-share'));return;}
  const url=location.href.split('#')[0];
  try{
   if(navigator.share){await navigator.share({title:document.title,url});return;}
