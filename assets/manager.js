@@ -19,6 +19,7 @@ const postFor=id=>state.posts.find(post=>post.id===id);
 const writeLink=(id=null,lang=state.lang,chapterId=null,bookId=null)=>writer(lang)+'?'+(id?'id='+encodeURIComponent(id):'new=1&lang='+encodeURIComponent(lang)+(chapterId?'&chapter='+encodeURIComponent(chapterId):'')+(bookId?'&book='+encodeURIComponent(bookId):''));
 const payload=(op,data)=>({op,...data});
 const button=(action,id,text,kind='')=>'<button type="button" class="manager-mini '+kind+'" data-action="'+esc(action)+'" data-id="'+esc(id)+'">'+esc(text)+'</button>';
+const articleCoverButton=post=>button('article-cover',post.id,post.language==='en'?'Edit cover':'编辑封面');
 async function request(path,options={}){
   const response=await fetch(path,{credentials:'same-origin',...options,headers:{
     Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),
@@ -146,6 +147,7 @@ function renderSeries(item){
     '</div><div class="manager-actions">'+
       '<a class="manager-mini" href="'+esc(writeLink(post.id,post.language))+'">'+(english?'Edit text':'编辑正文')+'</a>'+
       '<a class="manager-mini" href="'+esc(writeLink(post.id,post.language))+'">'+(english?'Placement':'调整归属')+'</a>'+
+      articleCoverButton(post)+
     '</div></article>').join('');
   return '<section class="manager-series-card">'+
     '<div class="manager-series-intro">'+
@@ -210,7 +212,7 @@ function renderArticles(){
     const where=book?'收录：'+book.title+' / '+chapter.title:directSeries.length?'收录系列：'+directSeries.join('、'):'独立文章';
     const metrics=state.stats.find(s=>s.post_id===p.id);
     const stats=metrics?' · '+metrics.views+' 阅读 · '+metrics.likes+' 点赞 · '+metrics.comments+' 评论':' · '+(p.views||0)+' 阅读 · '+(p.likes||0)+' 点赞';
-    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字'+stats+'</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+button('article-link',p.id,'设置归属')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
+    return '<article class="manager-article-row"><div class="manager-article-main"><div class="manager-article-meta"><span class="manager-status '+(p.status==='draft'?'is-draft':'')+'">'+(p.status==='published'?'已发布':'草稿')+'</span><span>'+esc(types[p.type]||p.type)+'</span><span>'+esc(where)+'</span></div><h3>'+esc(p.title)+'</h3><p>'+esc(p.excerpt||'')+'</p><small>'+esc(p.slug)+' · '+(p.word_count||0)+' 字'+stats+'</small></div><div class="manager-article-actions"><a class="manager-outline-button" href="'+writeLink(p.id)+'">编辑正文</a>'+articleCoverButton(p)+button('article-link',p.id,'设置归属')+button('article-delete',p.id,'删除文章','danger')+'</div></article>';
   }).join(''):'<div class="manager-empty">没有找到符合条件的文章。</div>';
 }
 function renderComments(){
@@ -312,6 +314,26 @@ function bookEditor(item=null,defaultSlug=''){
   field({name:'status',label:'公开状态',options:statusOptions,value:item?.status||'draft'})
  ],data=>api(payload(item?'book-update':'book-create',{...data,...(item?{id:item.id}:{language:state.lang})})));
 }
+function coverEditor(item){
+  const english=item.language==='en';
+  const imageField=field({name:'cover_url',label:english?'Post cover (upload an image or enter a URL)':'文章封面（上传图片或填网址）',value:item.cover_url||''});
+  const input=imageField.querySelector('input');
+  const removeButton=document.createElement('button');
+  removeButton.type='button';
+  removeButton.className='manager-mini';
+  removeButton.textContent=english?'Remove cover':'移除封面';
+  removeButton.addEventListener('click',()=>{
+    input.value='';
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.focus();
+  });
+  present((english?'Edit cover · ':'编辑封面 · ')+item.title,[imageField,removeButton],data=>
+    request('/api/admin/posts/'+encodeURIComponent(item.id),{
+      method:'PATCH',
+      body:JSON.stringify({cover_url:data.cover_url})
+    })
+  );
+}
 function chapterEditor(book,item=null){
  present(item?'编辑章节':'新建章节',[
   field({name:'title',label:'章节标题',required:true,value:item?.title}),
@@ -363,6 +385,7 @@ async function act(action,id){
   case 'section-new':if(chapter)location.href=writeLink(null,bookFor(chapter.book_id)?.language||state.lang,chapter.id);break;
   case 'section-link':if(chapter)linkEditor(chapter);break;
   case 'section-move':if(post)linkEditor(null,post);break;
+  case 'article-cover':if(post)coverEditor(post);break;
   case 'article-link':if(post)location.href=writeLink(post.id);break;
   case 'section-unlink':if(post)await remove('section-unlink',{post_id:post.id},'将「'+post.title+'」移出章节目录？文章正文仍会保留。');break;
   case 'article-delete':if(post)await removeArticle(post);break;

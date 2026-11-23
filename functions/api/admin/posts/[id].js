@@ -15,6 +15,20 @@ export async function onRequestPut(context){
   catch(e){if(/UNIQUE|constraint/i.test(e.message||''))return error('An article with this slug already exists in this language.',409);throw e;}
   return send({ok:true,id});
 }
+export async function onRequestPatch(context){
+  const auth=await guard(context,true);if(auth.failed)return auth.failed;
+  const id=context.params.id;if(!/^[0-9a-f-]{36}$/.test(id))return error('Invalid id.');
+  let data;try{data=await parseJson(context.request,12000);}catch(e){return error(e.message);}
+  if(typeof data?.cover_url!=='string')return error('Invalid cover URL.');
+  const cover=data.cover_url.trim();
+  if(cover.length>1000||(cover&&!(/^https:\/\/[^\s<>"']+$/i.test(cover)||/^\/assets\/(?:graphics|covers)\/[a-zA-Z0-9_./-]+\.(?:svg|png|jpe?g|webp|gif)$/i.test(cover)||/^\/media\/covers\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif)$/i.test(cover))))
+    return error('封面必须是 HTTPS 图片地址、网站内图片路径或已上传的封面图片。');
+  const old=await context.env.DB.prepare('SELECT id FROM posts WHERE id=?').bind(id).first();
+  if(!old)return error('Article not found.',404);
+  await context.env.DB.prepare('UPDATE posts SET cover_url=?,updated_at=? WHERE id=?')
+    .bind(cover,new Date().toISOString(),id).run();
+  return send({ok:true,id,cover_url:cover});
+}
 export async function onRequestDelete(context){
   const a=await guard(context,true);if(a.failed)return a.failed;
   const id=context.params.id;if(!/^[0-9a-f-]{36}$/.test(id))return error('Invalid id.');
